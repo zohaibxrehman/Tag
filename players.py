@@ -14,7 +14,7 @@ class Player:
     _direction: str
 
     def __init__(self, name: str, vision: int, speed: int, game: Game,
-                       colour: str, location: Tuple[int, int]) -> None:
+                 colour: str, location: Tuple[int, int]) -> None:
         self._name = name
         self._location = location
         self._colour = colour
@@ -81,10 +81,10 @@ class Player:
         else:
             self._direction = 'E'
 
-
     def set_speed(self, speed: int) -> None:
         """ Update <self>'s speed to <speed> """
-        self._speed = speed
+        if speed >= 0:
+            self._speed = speed
 
     def next_direction(self) -> Set[str]:
         """ Update the direction to move the next time self.move is called. This direction should be
