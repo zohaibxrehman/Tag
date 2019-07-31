@@ -218,8 +218,8 @@ class QuadTree(Tree):
 
         Runtime: O(log(n))
         """
-        if not (((point[0] <= 2 * self._centre[0] and point[1] <= 2 *
-                self._centre[1])) or self.contains_point(point)):
+        if not (point[0] <= 2 * self._centre[0] and point[1] <= 2 *
+                self._centre[1]) or self.contains_point(point):
             raise OutOfBoundsError
         elif self.is_empty():
             self._name = name
@@ -503,22 +503,22 @@ class QuadTree(Tree):
         elif self.is_leaf():
             if self._name == name:
                 new_point = self._calc_point(self._point, direction, steps)
-
-                if (not (new_point[0] <= 2 * self._centre[0] and
-                         new_point[1] <= 2 * self._centre[1])) or \
-                        self.contains_point(new_point):
+                if not (new_point[0] <= 2 * self._centre[0] and
+                        new_point[1] <= 2 * self._centre[1]) \
+                        or self.contains_point(new_point):
                     raise OutOfBoundsError
                 else:
                     self._point = new_point
                     return self._point
         else:
-            point = self._find_point(name)
+            point = self._find_point(name)  # Proper None ?
             if point is not None:
-                if not (((point[0] <= 2 * self._centre[0] and point[1] <= 2 *
-                        self._centre[1])) or self.contains_point(point)):
+                new_point = self._calc_point(point, direction, steps)
+                if not (new_point[0] <= 2 * self._centre[0] and
+                        new_point[1] <= 2 * self._centre[1]) \
+                        or self.contains_point(new_point):
                     raise OutOfBoundsError
                 self.remove_point(point)
-                new_point = self._calc_point(point)
                 self.insert(name, new_point)
             return point
 
@@ -574,32 +574,39 @@ class QuadTree(Tree):
         if self.is_empty():
             pass
         elif self.is_leaf():
-            if self._name == name:
-                point = self._point
-                if direction == 'N':
-                    point = point[0], point[1] - steps
-                elif direction == 'S':
-                    point = point[0], point[1] + steps
-                elif direction == 'W':
-                    point = point[0] - steps, point[1]
-                else:
-                    point = point[0] + steps, point[1]
-
-                if (not (point[0] <= 2 * self._centre[0] and
-                         point[1] <= 2 * self._centre[1])) or \
-                        self.contains_point(point):
+            if self._point == point:
+                new_point = self._calc_point(self._point, direction, steps)
+                if (not (new_point[0] <= 2 * self._centre[0] and
+                         new_point[1] <= 2 * self._centre[1])) or \
+                        self.contains_point(new_point):
                     raise OutOfBoundsError
                 else:
-                    self._point = point
+                    self._point = new_point
                     return self._point
-        elif point[0] <= self._centre[0] and point[1] <= self._centre[1]:  # NW
+        elif self.contains_point(point):
+            new_point = self._calc_point(point, direction, steps)
+            if not (new_point[0] <= 2 * self._centre[0] and
+                    new_point[1] <= 2 * self._centre[1]) \
+                    or self.contains_point(new_point):
+                raise OutOfBoundsError
+            name = self._find_name(point)
+            self.remove_point(point)
+            self.insert(name, new_point)
+
+    def _find_name(self, point):
+        if self.is_empty():
             pass
-        elif point[0] <= self._centre[0]:  # SW
-            pass
-        elif point[1] <= self._centre[1]:  # NE
-            pass
-        else:  # SE
-            pass
+        elif self.is_leaf():
+            return self._name
+        else:
+            if point[0] <= self._centre[0] and point[1] <= self._centre[1]:  # NW
+                return self._nw.contains_point(point) # IF NONE ? NOT POSSIBLE ?
+            elif point[0] <= self._centre[0]:  # SW
+                return self._sw.contains_point(point)
+            elif point[1] <= self._centre[1]:  # NE
+                return self._ne.contains_point(point)
+            else:  # SE
+                return self._se.contains_point(point)
 
     def names_in_range(self, point: Tuple[int, int], direction: str, distance: int) -> List[str]:
         """ Return a list of names of players whose location is in the <direction>
@@ -778,20 +785,21 @@ class TwoDTree(Tree):
                     self._lt._split_type = 'y'
                     self._lt._nw = self._nw
                     self._lt._se = self._point[0], self._se[1]
-                # elif self._split_type == 'x':  # RX
-                #     self._gt = TwoDTree((self._point[0], self._nw[1]), self._se)
-                #     self._gt._name = name
-                #     self._gt._point = point
-                elif self._split_type == 'y':  # LU
+                else:  # LU
                     self._split_type = 'x'
                     self._lt._nw = self._nw
                     self._lt._se = self._se[0], self._point[1]
-                # else:  # LD
-                #     self._gt = TwoDTree((self._nw[0], self._point[1]), self._se)
-                #     self._gt._name = name
-                #     self._gt._point = point
+                self._lt._fix_values()
             if self._gt is not None:
-                pass
+                if self._split_type == 'x':  # RX
+                    self._lt._split_type = 'y'
+                    self._lt._nw = self._point[0], self._nw[1]
+                    self._lt._se = self._se
+                else:  # LD
+                    self._split_type = 'x'
+                    self._lt._nw = self._nw[0], self._point[1]
+                    self._lt._se = self._se
+                self._gt._fix_values()
 
     def __contains__(self, name: str) -> bool:
         """ Return True if a player named <name> is stored in this tree.
@@ -882,12 +890,6 @@ class TwoDTree(Tree):
 
         Runtime: O(n)
         """
-        # if self._name == name:
-        #     s
-        # elif self._lt is not None and name in self._lt:
-        #
-        # elif name in self._gt:
-        #     pass
         if self.is_empty():
             pass
         elif self.is_leaf():
@@ -906,25 +908,6 @@ class TwoDTree(Tree):
                 self._lt.remove(name)
             elif self._gt is not None and name in self._gt:
                 self._gt.remove(name)
-                # LEAF CASE
-                # if self._lt._lt is not None and self._lt._lt.is_empty():
-                #     self._lt._lt = None
-                # elif self._lt._lt is not None:
-                #     if self.
-                # if self._gt._gt is not None and self._gt._gt.is_empty():
-                #     self._gt._gt = None
-                # elif self._gt._gt is not None:
-                #     pass
-                # if self._lt._lt.is_empty():
-                #     self._lt._lt = None
-                # if self._gt._gt.is_empty():
-                #     self._gt._gt = None
-                # if self._lt._lt._name == name:
-                #     pass
-                # elif self._lt._gt._name == name:
-                #     pass
-            # elif self._gt is not None and name in self._gt:
-            #     self._gt.remove(name)
 
     def _remove_root(self):
         # if self.is_leaf():
@@ -936,8 +919,9 @@ class TwoDTree(Tree):
             self._name, self._point, self._lt, self._gt = \
                 self._lt._name, self._lt._point, self._lt._lt, self._lt._gt
         else:
-            promoted_tree_info = self._extract_max_info()
-            self.remove_point(promoted_tree_info[1]) # may fail silently if promotion took place
+            promoted_tree_info = self._extract_max_info() # TRY ALL THE REMOVAL WORK HERE
+            self.remove_point(promoted_tree_info[1]) # may fail silently if promotion took place in previous step
+            # OR safer self.remove(promoted_tree_info[0])
             self._name, self._point = \
                 promoted_tree_info[0], promoted_tree_info[1]
 
