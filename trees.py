@@ -291,7 +291,18 @@ class QuadTree(Tree):
             self._se = tree
 
     def _find_centre(self, point) -> Tuple[int, int]:
-        pass
+        if point[0] <= self._centre[0] and point[1] <= self._centre[1]:  # NW
+            return int(self._centre[0] - self._centre[0] / 2), \
+                   int(self._centre[1] - self._centre[1] / 2)
+        elif point[0] <= self._centre[0]:  # SW
+            return int(self._centre[0] - self._centre[0] / 2), \
+                   int(self._centre[1] + self._centre[1] / 2)
+        elif point[1] <= self._centre[1]:  # NE
+            return int(self._centre[0] + self._centre[0] / 2), \
+                   int(self._centre[1] - self._centre[1] / 2)
+        else:  # SE
+            return int(self._centre[0] + self._centre[0] / 2), \
+                   int(self._centre[1] + self._centre[1] / 2)
 
     def remove(self, name: str) -> None:
         """Remove information about a player named <name> from this tree.
@@ -304,116 +315,85 @@ class QuadTree(Tree):
             if self._name == name:
                 self._name = None
                 self._point = None
-        else:
-            if self._nw is not None and name in self._nw:
-                # REMOVE FROM NW -> IF NW EMPTY THEN RID OF IT
-                #                -> IF ONLY ONE GOOD ITEM LEFT THEN CLEAN THEN PROMOTE
-                #                -> MULTIPLE GOOD ITEMS THEN LEAVE AS IS
-                #                GOOD ITEM == NOT EMPTY, NOT NONE
-                #                BAD ITEM == EMPTY(MUST BE CLEANED) OR NONE
-                self._nw.remove(name)
-                if self._nw.is_empty():
-                    self._nw = None
-                else:
-                    # CLEAN UP
-                    if self._nw._nw.is_empty():
-                        self._nw._nw = None
-                    if self._nw._ne.is_empty():
-                        self._nw._ne = None
-                    if self._nw._sw.is_empty():
-                        self._nw._sw = None
-                    if self._nw._se.is_empty():
-                        self._nw._se = None
-                    amount = [self._nw._nw, self._nw._ne, self._nw._sw, self._nw._se]
-                    while None in amount:
-                        amount.remove(None)
-                    # PROMOTION
-                    if len(amount) == 1:
-                        self._nw = amount[0] # PUSHING IT UP
-                        # DELETING FOR PROMOTION
-                        self._nw._nw = None
-                        self._nw._ne = None
-                        self._nw._sw = None
-                        self._nw._se = None
-            elif self._ne is not None and name in self._ne:
-                self._ne.remove(name)
-                if self._ne.is_empty():
-                    self._ne = None
-                else:
-                    # CLEAN UP
-                    if self._ne._nw.is_empty():
-                        self._ne._nw = None
-                    if self._ne._ne.is_empty():
-                        self._ne._ne = None
-                    if self._ne._sw.is_empty():
-                        self._ne._sw = None
-                    if self._ne._se.is_empty():
-                        self._ne._se = None
-                    amount = [self._ne._nw, self._ne._ne, self._ne._sw,
-                              self._ne._se]
-                    while None in amount:
-                        amount.remove(None)
-                    # PROMOTION
-                    if len(amount) == 1:
-                        self._ne = amount[0]  # PUSHING IT UP
-                        # DELETING FOR PROMOTION
-                        self._ne._nw = None
-                        self._ne._ne = None
-                        self._ne._sw = None
-                        self._ne._se = None
 
-            elif self._sw is not None and name in self._sw:
-                self._sw.remove(name)
-                if self._sw.is_empty():
-                    self._sw = None
-                else:
-                    # CLEAN UP
-                    if self._sw._nw.is_empty():
-                        self._sw._nw = None
-                    if self._sw._ne.is_empty():
-                        self._sw._ne = None
-                    if self._sw._sw.is_empty():
-                        self._sw._sw = None
-                    if self._sw._se.is_empty():
-                        self._sw._se = None
-                    amount = [self._sw._nw, self._sw._ne, self._sw._sw,
-                              self._sw._se]
-                    while None in amount:
-                        amount.remove(None)
-                    # PROMOTION
-                    if len(amount) == 1:
-                        self._nw = amount[0]  # PUSHING IT UP
-                        # DELETING FOR PROMOTION
-                        self._sw._nw = None
-                        self._sw._ne = None
-                        self._sw._sw = None
-                        self._sw._se = None
-            elif self._se is not None and name in self._se:
-                self._se.remove(name)
-                if self._se.is_empty():
-                    self._se = None
-                else:
-                    # CLEAN UP
-                    if self._se._nw.is_empty():
-                        self._se._nw = None
-                    if self._se._ne.is_empty():
-                        self._se._ne = None
-                    if self._se._sw.is_empty():
-                        self._se._sw = None
-                    if self._se._se.is_empty():
-                        self._se._se = None
-                    amount = [self._se._nw, self._se._ne, self._se._sw,
-                              self._se._se]
-                    while None in amount:
-                        amount.remove(None)
-                    # PROMOTION
-                    if len(amount) == 1:
-                        self._se = amount[0]  # PUSHING IT UP
-                        # DELETING FOR PROMOTION
-                        self._se._nw = None
-                        self._se._ne = None
-                        self._se._sw = None
-                        self._se._se = None
+        elif self._nw is not None and self._nw.is_leaf() and \
+                self._nw._name == name:
+            self._nw = None
+        elif self._ne is not None and self._ne.is_leaf() and \
+                self._ne._name == name:
+            self._ne = None
+        elif self._sw is not None and self._sw.is_leaf() and \
+                self._sw._name == name:
+            self._sw = None
+        elif self._se is not None and self._se.is_leaf() and \
+                self._se._name == name:
+            self._se = None
+
+        elif self._nw is not None and name in self._nw:
+            # REMOVE FROM NW -> IF NW EMPTY THEN RID OF IT
+            #                -> IF ONLY ONE SUBTREE LEFT THEN CLEAN THEN PROMOTE
+            #                -> MULTIPLE SUBTREES THEN LEAVE AS IS
+            self._nw.remove(name)
+            if self._nw.is_empty():
+                self._nw = None
+            else:
+                subtrees = [self._nw._nw, self._nw._ne, self._nw._sw,
+                            self._nw._se]
+                while None in subtrees:
+                    subtrees.remove(None)
+                # PROMOTION
+                if len(subtrees) == 1:
+                    self._nw = subtrees[0]  # PUSHING IT UP
+                    # DELETING FOR PROMOTION
+                    self._nw._nw = None
+                    self._nw._ne = None
+                    self._nw._sw = None
+                    self._nw._se = None
+        elif self._ne is not None and name in self._ne:
+            self._ne.remove(name)
+            if self._ne.is_empty():
+                self._ne = None
+            else:
+                subtrees = [self._ne._nw, self._ne._ne, self._ne._sw,
+                            self._ne._se]
+                while None in subtrees:
+                    subtrees.remove(None)
+                if len(subtrees) == 1:
+                    self._ne = subtrees[0]
+                    self._ne._nw = None
+                    self._ne._ne = None
+                    self._ne._sw = None
+                    self._ne._se = None
+        elif self._sw is not None and name in self._sw:
+            self._sw.remove(name)
+            if self._sw.is_empty():
+                self._sw = None
+            else:
+                subtrees = [self._sw._nw, self._sw._ne, self._sw._sw,
+                            self._sw._se]
+                while None in subtrees:
+                    subtrees.remove(None)
+                if len(subtrees) == 1:
+                    self._nw = subtrees[0]
+                    self._sw._nw = None
+                    self._sw._ne = None
+                    self._sw._sw = None
+                    self._sw._se = None
+        elif self._se is not None and name in self._se:
+            self._se.remove(name)
+            if self._se.is_empty():
+                self._se = None
+            else:
+                subtrees = [self._se._nw, self._se._ne, self._se._sw,
+                            self._se._se]
+                while None in subtrees:
+                    subtrees.remove(None)
+                if len(subtrees) == 1:
+                    self._se = subtrees[0]
+                    self._se._nw = None
+                    self._se._ne = None
+                    self._se._sw = None
+                    self._se._se = None
 
     def remove_point(self, point: Tuple[int, int]) -> None:
         """ Remove information about a player at point <point> from this tree.
@@ -426,118 +406,82 @@ class QuadTree(Tree):
             if self._point == point:
                 self._name = None
                 self._point = None
-        else:
-            # if self._name == name:
-            #     self._name = None
-            #     self._point = None
-            #     self._nw = None
-            #     self._ne = None
-            #     self._sw = None
-            #     self._se = None
-            if point[0] <= self._centre[0] and point[1] <= self._centre[1]:  # NW
-                self._nw.remove_point(point)
-                if self._nw.is_empty():
-                    self._nw = None
-                else:
-                    # CLEAN UP
-                    if self._nw._nw.is_empty():
-                        self._nw._nw = None
-                    if self._nw._ne.is_empty():
-                        self._nw._ne = None
-                    if self._nw._sw.is_empty():
-                        self._nw._sw = None
-                    if self._nw._se.is_empty():
-                        self._nw._se = None
-                    amount = [self._nw._nw, self._nw._ne, self._nw._sw,
-                              self._nw._se]
-                    while None in amount:
-                        amount.remove(None)
-                    # PROMOTION
-                    if len(amount) == 1:
-                        self._nw = amount[0]  # PUSHING IT UP
-                        # DELETING FOR PROMOTION
-                        self._nw._nw = None
-                        self._nw._ne = None
-                        self._nw._sw = None
-                        self._nw._se = None
-            elif point[0] <= self._centre[0] and point[1] > self._centre[1]:  # SW
-                self._sw.remove_point(point)
-                if self._sw.is_empty():
-                    self._sw = None
-                else:
-                    # CLEAN UP
-                    if self._sw._nw.is_empty():
-                        self._sw._nw = None
-                    if self._sw._ne.is_empty():
-                        self._sw._ne = None
-                    if self._sw._sw.is_empty():
-                        self._sw._sw = None
-                    if self._sw._se.is_empty():
-                        self._sw._se = None
-                    amount = [self._sw._nw, self._sw._ne, self._sw._sw,
-                              self._sw._se]
-                    while None in amount:
-                        amount.remove(None)
-                    # PROMOTION
-                    if len(amount) == 1:
-                        self._nw = amount[0]  # PUSHING IT UP
-                        # DELETING FOR PROMOTION
-                        self._sw._nw = None
-                        self._sw._ne = None
-                        self._sw._sw = None
-                        self._sw._se = None
-            elif point[0] > self._centre[0] and point[1] <= self._centre[1]:  # NE
-                self._ne.remove(name)
-                if self._ne.is_empty():
-                    self._ne = None
-                else:
-                    # CLEAN UP
-                    if self._ne._nw.is_empty():
-                        self._ne._nw = None
-                    if self._ne._ne.is_empty():
-                        self._ne._ne = None
-                    if self._ne._sw.is_empty():
-                        self._ne._sw = None
-                    if self._ne._se.is_empty():
-                        self._ne._se = None
-                    amount = [self._ne._nw, self._ne._ne, self._ne._sw,
-                              self._ne._se]
-                    while None in amount:
-                        amount.remove(None)
-                    # PROMOTION
-                    if len(amount) == 1:
-                        self._ne = amount[0]  # PUSHING IT UP
-                        # DELETING FOR PROMOTION
-                        self._ne._nw = None
-                        self._ne._ne = None
-                        self._ne._sw = None
-                        self._ne._se = None
-            elif point[0] > self._centre[0] and point[1] > self._centre[1]:  # SE
-                self._se.remove_point(point)
-                if self._se.is_empty():
-                    self._se = None
-                else:
-                    # CLEAN UP
-                    if self._se._nw.is_empty():
-                        self._se._nw = None
-                    if self._se._ne.is_empty():
-                        self._se._ne = None
-                    if self._se._sw.is_empty():
-                        self._se._sw = None
-                    if self._se._se.is_empty():
-                        self._se._se = None
-                    amount = [self._se._nw, self._se._ne, self._se._sw,
-                              self._se._se]
-                    while None in amount:
-                        amount.remove(None)
-                    # PROMOTION
-                    if len(amount) == 1:
-                        self._se = amount[0]  # PUSHING IT UP
-                        # DELETING FOR PROMOTION
-                        self._se._nw = None
-                        self._se._ne = None
-                        self._se._sw = None
-                        self._se._se = None
+
+        elif self._nw is not None and self._nw.is_leaf() and \
+                self._nw._point == point:
+            self._nw = None
+        elif self._ne is not None and self._ne.is_leaf() and \
+                self._ne._point == point:
+            self._ne = None
+        elif self._sw is not None and self._sw.is_leaf() and \
+                self._sw._point == point:
+            self._sw = None
+        elif self._se is not None and self._se.is_leaf() and \
+                self._se._point == point:
+            self._se = None
+
+        elif point[0] <= self._centre[0] and point[1] <= self._centre[1]:  # NW
+            self._nw.remove_point(point)
+            if self._nw.is_empty():
+                self._nw = None
+            else:
+                subtrees = [self._nw._nw, self._nw._ne, self._nw._sw,
+                            self._nw._se]
+                while None in subtrees:
+                    subtrees.remove(None)
+                # PROMOTION
+                if len(subtrees) == 1:
+                    self._nw = subtrees[0]  # PUSHING IT UP
+                    # DELETING FOR PROMOTION
+                    self._nw._nw = None
+                    self._nw._ne = None
+                    self._nw._sw = None
+                    self._nw._se = None
+        elif point[0] <= self._centre[0] and point[1] > self._centre[1]:  # SW
+            self._sw.remove_point(point)
+            if self._sw.is_empty():
+                self._sw = None
+            else:
+                subtrees = [self._sw._nw, self._sw._ne, self._sw._sw,
+                            self._sw._se]
+                while None in subtrees:
+                    subtrees.remove(None)
+                if len(subtrees) == 1:
+                    self._nw = subtrees[0]
+                    self._sw._nw = None
+                    self._sw._ne = None
+                    self._sw._sw = None
+                    self._sw._se = None
+        elif point[0] > self._centre[0] and point[1] <= self._centre[1]:  # NE
+            self._ne.remove_point(point)
+            if self._ne.is_empty():
+                self._ne = None
+            else:
+                subtrees = [self._ne._nw, self._ne._ne, self._ne._sw,
+                            self._ne._se]
+                while None in subtrees:
+                    subtrees.remove(None)
+                if len(subtrees) == 1:
+                    self._ne = subtrees[0]
+                    self._ne._nw = None
+                    self._ne._ne = None
+                    self._ne._sw = None
+                    self._ne._se = None
+        elif point[0] > self._centre[0] and point[1] > self._centre[1]:  # SE
+            self._se.remove_point(point)
+            if self._se.is_empty():
+                self._se = None
+            else:
+                subtrees = [self._se._nw, self._se._ne, self._se._sw,
+                            self._se._se]
+                while None in subtrees:
+                    subtrees.remove(None)
+                if len(subtrees) == 1:
+                    self._se = subtrees[0]
+                    self._se._nw = None
+                    self._se._ne = None
+                    self._se._sw = None
+                    self._se._se = None
 
     def move(self, name: str, direction: str, steps: int) -> Optional[Tuple[int, int]]:
         """ Return the new location of the player named <name> after moving it
@@ -558,22 +502,14 @@ class QuadTree(Tree):
             pass
         elif self.is_leaf():
             if self._name == name:
-                point = self._point
-                if direction == 'N':
-                    point = point[0], point[1] - steps
-                elif direction == 'S':
-                    point = point[0], point[1] + steps
-                elif direction == 'W':
-                    point = point[0] - steps, point[1]
-                else:
-                    point = point[0] + steps, point[1]
+                new_point = self._calc_point(self._point, direction, steps)
 
-                if (not (point[0] <= 2 * self._centre[0] and
-                         point[1] <= 2 * self._centre[1])) or \
-                        self.contains_point(point):
+                if (not (new_point[0] <= 2 * self._centre[0] and
+                         new_point[1] <= 2 * self._centre[1])) or \
+                        self.contains_point(new_point):
                     raise OutOfBoundsError
                 else:
-                    self._point = point
+                    self._point = new_point
                     return self._point
         else:
             point = self._find_point(name)
@@ -582,7 +518,8 @@ class QuadTree(Tree):
                         self._centre[1])) or self.contains_point(point)):
                     raise OutOfBoundsError
                 self.remove_point(point)
-                self.insert(name, point)
+                new_point = self._calc_point(point)
+                self.insert(name, new_point)
             return point
 
     def _find_point(self, name):
@@ -605,6 +542,16 @@ class QuadTree(Tree):
             else:
                 return
 
+    def _calc_point(self, point, direction, steps) -> Tuple[int, int]:
+        if direction == 'N':
+            return point[0], point[1] - steps
+        elif direction == 'S':
+            return point[0], point[1] + steps
+        elif direction == 'W':
+            return point[0] - steps, point[1]
+        else:
+            return point[0] + steps, point[1]
+
     def move_point(self, point: Tuple[int, int], direction: str, steps: int) -> Optional[Tuple[int, int]]:
         """ Return the new location of the player at point <point> after moving it
         in the given <direction> by <steps> steps.
@@ -624,7 +571,35 @@ class QuadTree(Tree):
         direction in ['N', 'S', 'E', 'W']
 
         """
-        pass
+        if self.is_empty():
+            pass
+        elif self.is_leaf():
+            if self._name == name:
+                point = self._point
+                if direction == 'N':
+                    point = point[0], point[1] - steps
+                elif direction == 'S':
+                    point = point[0], point[1] + steps
+                elif direction == 'W':
+                    point = point[0] - steps, point[1]
+                else:
+                    point = point[0] + steps, point[1]
+
+                if (not (point[0] <= 2 * self._centre[0] and
+                         point[1] <= 2 * self._centre[1])) or \
+                        self.contains_point(point):
+                    raise OutOfBoundsError
+                else:
+                    self._point = point
+                    return self._point
+        elif point[0] <= self._centre[0] and point[1] <= self._centre[1]:  # NW
+            pass
+        elif point[0] <= self._centre[0]:  # SW
+            pass
+        elif point[1] <= self._centre[1]:  # NE
+            pass
+        else:  # SE
+            pass
 
     def names_in_range(self, point: Tuple[int, int], direction: str, distance: int) -> List[str]:
         """ Return a list of names of players whose location is in the <direction>
@@ -673,7 +648,7 @@ class QuadTree(Tree):
         Runtime: O(n)
         """
         if self.is_empty():
-            return 1  # FIXME
+            return 1
         elif self.is_leaf():
             return 1
         else:
@@ -692,7 +667,7 @@ class QuadTree(Tree):
         Runtime: O(n)
         """
         if self.is_empty():
-            return 1  # FIXME
+            return 1
         elif self.is_leaf():
             return 1
         else:
@@ -1038,7 +1013,32 @@ class TwoDTree(Tree):
         === precondition ===
         direction in ['NE', 'SE', 'NE', 'SW']
         """
-        pass
+        if self.is_empty():
+            return []
+        elif self.is_leaf():
+            if direction == 'NW':
+                final = point[0] - distance, point[1] - distance
+            elif direction == 'NE':
+                final = point[0] + distance, point[1] - distance
+            elif direction == 'SW':
+                final = point[0] - distance, point[1] + distance
+            else:
+                final = point[0] + distance, point[1] + distance
+            x_range = [point[0], final[0]]
+            y_range = [point[1], final[1]]
+            if ((min(x_range) <= self._point[0] <= max(x_range) and
+                 min(y_range) <= self._point[1] <= max(y_range))):
+                return [self._name]
+            else:
+                return []
+        else:
+            subtrees = [self._lt, self._gt]
+            while None in subtrees:
+                subtrees.remove(None)
+            players = []
+            for tree in subtrees:
+                players.extend(tree.names_in_range(point, direction, distance))
+            return players
 
     def size(self) -> int:
         """ Return the number of nodes in <self>
@@ -1046,7 +1046,7 @@ class TwoDTree(Tree):
         Runtime: O(n)
         """
         if self.is_empty():
-            return 1  # FIXME
+            return 1
         elif self.is_leaf():
             return 1
         else:
@@ -1083,7 +1083,6 @@ class TwoDTree(Tree):
         Runtime: O(1)
         """
         return self._lt is None and self._gt is None
-
 
     def is_empty(self) -> bool:
         """ Return True if <self> does not store any information about the location
