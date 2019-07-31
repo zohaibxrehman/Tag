@@ -184,20 +184,6 @@ class QuadTree(Tree):
                    or (self._nw is not None and self._nw.__contains__(name)) \
                    or (self._se is not None and self._se.__contains__(name)) \
                    or (self._sw is not None and self._sw.__contains__(name))
-            #  use in
-
-        # if self._ne is None and self._nw is None and self._se is None and \
-        #         self._sw is None: # use all()
-        #     if self._name is None:  # remove is None
-        #         return False
-        #     else:
-        #         return self._name == name
-        # else:
-        #     return (self._ne is not None and self._ne.__contains__(name))\
-        #            or (self._nw is not None and self._nw.__contains__(name))\
-        #            or (self._se is not None and self._se.__contains__(name))\
-        #            or (self._sw is not None and self._sw.__contains__(name))
-        #     #  use in
 
     def contains_point(self, point: Tuple[int, int]) -> bool:
         """ Return True if a player at location <point> is stored in this tree.
@@ -209,34 +195,18 @@ class QuadTree(Tree):
         elif self.is_leaf():
             return self._point == point
         else:
-            if point[0] <= self._centre[0]:  # WEST
-                if point[1] <= self._centre[1]:  # NW
-                    return self._nw.contains_point(point) if self._nw is not None else False
-                else:  # SW
-                    return self._sw.contains_point(point) if self._sw is not None else False
-            else:  # EAST
-                if point[1] <= self._centre[1]:  # NE
-                    return self._ne.contains_point(point) if self._ne is not None else False
-                else:  # SE
-                    return self._se.contains_point(point) if self._se is not None else False
-
-        # if self._ne is None and self._nw is None and self._se is None and \
-        #         self._sw is None: # use all()
-        #     if self._point is None:  # remove is None
-        #         return False
-        #     else:
-        #         return self._point == point
-        # else:  # confirm once more the directions
-        #     if point[0] <= self._point[0]:  # WEST
-        #         if point[1] <= self._point[1]:  # NW
-        #             return self._nw.contains_point(point)
-        #         else:  # SW
-        #             return self._sw.contains_point(point)
-        #     else: # EAST
-        #         if point[1] <= self._point[1]:  # NE
-        #             return self._ne.contains_point(point)
-        #         else:  # SE
-        #             return self._se.contains_point(point)
+            if point[0] <= self._centre[0] and point[1] <= self._centre[1]:  # NW
+                return self._nw.contains_point(point) \
+                    if self._nw is not None else False
+            elif point[0] <= self._centre[0]:  # SW
+                return self._sw.contains_point(point) \
+                    if self._sw is not None else False
+            elif point[1] <= self._centre[1]:  # NE
+                return self._ne.contains_point(point) \
+                    if self._ne is not None else False
+            else:  # SE
+                return self._se.contains_point(point) \
+                    if self._se is not None else False
 
     def insert(self, name: str, point: Tuple[int, int]) -> None:
         """Insert a player named <name> into this tree at point <point>.
@@ -255,7 +225,6 @@ class QuadTree(Tree):
             self._name = name
             self._point = point
         elif self.is_leaf():
-            # maybe calc this once and store in var to re-use
             if self._find_region(self._point) == self._find_region(point):
                 # copying
                 demoted_tree = QuadTree(self._find_centre(self._centre))
@@ -267,9 +236,9 @@ class QuadTree(Tree):
                 self._point = None
                 demoted_tree.insert(name, point)  # recursion
 
-                # sex
+                # combine
                 self._insert_region(demoted_tree)
-            else:
+            else: # REGIONAL BASE CASE
                 old_tree = QuadTree(self._find_centre(self._centre))
                 old_tree._name = self._name
                 old_tree._point = self._point
@@ -284,30 +253,42 @@ class QuadTree(Tree):
                 self._insert_region(old_tree)
                 self._insert_region(new_tree)
         else:
-            if point[0] <= self._centre[0]:  # WEST
-                if point[1] <= self._centre[1]:  # NW
-                    if self._nw is None:
-                        self._nw = QuadTree(self._find_centre(point))
-                    self._nw.insert(name, point)
-                else:  # SW
-                    if self._sw is None:
-                        self._sw = QuadTree(self._find_centre(point))
-                    self._sw.insert(name, point)
-            else:  # EAST
-                if point[1] <= self._centre[1]:  # NE
-                    if self._ne is None:
-                        self._ne = QuadTree(self._find_centre(point))
-                    self._ne.insert(name, point)
-                else:  # SE
-                    if self._se is None:
-                        self._se = QuadTree(self._find_centre(point))
-                    self._se.insert(name, point)
+            if point[0] <= self._centre[0] and point[1] <= self._centre[1]:  # NW
+                if self._nw is None:
+                    self._nw = QuadTree(self._find_centre(point))
+                self._nw.insert(name, point)
+            elif point[0] <= self._centre[0]:  # SW
+                if self._sw is None:
+                    self._sw = QuadTree(self._find_centre(point))
+                self._sw.insert(name, point)
+            elif point[1] <= self._centre[1]:  # NE
+                if self._ne is None:
+                    self._ne = QuadTree(self._find_centre(point))
+                self._ne.insert(name, point)
+            else:  # SE
+                if self._se is None:
+                    self._se = QuadTree(self._find_centre(point))
+                self._se.insert(name, point)
 
     def _find_region(self, point: Tuple[int, int]) -> str:
-        pass
+        if point[0] <= self._centre[0] and point[1] <= self._centre[1]:  # NW
+            return 'NW'
+        elif point[0] <= self._centre[0]:  # SW
+            return 'SW'
+        elif point[1] <= self._centre[1]:  # NE
+            return 'NE'
+        else:  # SE
+            return 'SE'
 
     def _insert_region(self, tree: QuadTree) -> None:
-        pass
+        if tree._point[0] <= self._centre[0] and tree._point[1] <= self._centre[1]:  # NW
+            self._nw = tree
+        elif tree._point[0] <= self._centre[0]:  # SW
+            self._sw = tree
+        elif tree._point[1] <= self._centre[1]:  # NE
+            self._ne = tree
+        else:  # SE
+            self._se = tree
 
     def _find_centre(self, point) -> Tuple[int, int]:
         pass
@@ -324,7 +305,6 @@ class QuadTree(Tree):
                 self._name = None
                 self._point = None
         else:
-    
             if self._nw is not None and name in self._nw:
                 # REMOVE FROM NW -> IF NW EMPTY THEN RID OF IT
                 #                -> IF ONLY ONE GOOD ITEM LEFT THEN CLEAN THEN PROMOTE
