@@ -304,74 +304,6 @@ class QuadTree(Tree):
                         self._se = QuadTree(self._find_centre(point))
                     self._se.insert(name, point)
 
-        # if self.is_empty():
-        #     self._name = name
-        #     self._point = point
-        # elif self.is_leaf():
-        #     # maybe calc this once and store in var to re-use
-        #     if self._find_region(self._point) == self._find_region(point):
-        #         # copying
-        #         demoted_tree = QuadTree(self._find_centre(self._centre))
-        #         demoted_tree._name = self._name
-        #         demoted_tree._point = self._point
-        #
-        #         # emptying
-        #         self._name = None
-        #         self._point = None
-        #         demoted_tree.insert(name, point)  # recursion
-        #
-        #         # sex
-        #         self._insert_region(demoted_tree)
-        #     else:
-        #         self._name = None
-        #         self._point = None
-        #
-        #         new_tree = QuadTree(self._find_centre(point))
-        #         new_tree._name = name
-        #         new_tree._point = point
-        #
-        #         self._insert_region(new_tree)
-        # else:
-        #     if point[0] <= self._centre[0]:  # WEST
-        #         if point[1] <= self._centre[1]:  # NW
-        #             if self._nw is None:
-        #                 self._nw = QuadTree(self._find_centre(point))
-        #             self._nw.insert(name, point)
-        #         else:  # SW
-        #             if self._sw is None:
-        #                 self._sw = QuadTree(self._find_centre(point))
-        #             self._sw.insert(name, point)
-        #     else:  # EAST
-        #         if point[1] <= self._centre[1]:  # NE
-        #             if self._ne is None:
-        #                 self._ne = QuadTree(self._find_centre(point))
-        #             self._ne.insert(name, point)
-        #         else:  # SE
-        #             if self._se is None:
-        #                 self._se = QuadTree(self._find_centre(point))
-        #             self._se.insert(name, point)
-
-
-            # demoted_tree = QuadTree(self._calc_centre(self._point))
-            # demoted_tree._name = self._name
-            # demoted_tree._point = self._point
-            # new_tree = QuadTree(self._calc_centre(point))
-            # new_tree._name = name
-            # new_tree._point = point
-            # if demoted_tree._find_quad() == new_tree._find_quad():
-            #     self._name = None
-            #     self._point = None
-            #     split_quad = QuadTree(self._calc_centre(new_tree._centre))
-            #     split_quad.insert(new_tree)
-            #     split_quad.insert(demoted_tree)
-            #     self.insert(split_quad)
-            #
-            # else:
-            #     self._name = None
-            #     self._point = None
-            #     self._insert_quad(demoted_tree, demoted_tree._region())
-            #     self._insert_quad(new_tree, new_tree._region())
-
     def _find_region(self, point: Tuple[int, int]) -> str:
         pass
 
@@ -393,6 +325,8 @@ class QuadTree(Tree):
                 self._name = None
                 self._point = None
         else:
+            # if self._nw is not None and self.is_leaf() and self._nw._name == name:
+            #     pass
             if self._nw is not None and name in self._nw:
                 # REMOVE FROM NW -> IF NW EMPTY THEN RID OF IT
                 #                -> IF ONLY ONE GOOD ITEM LEFT THEN CLEAN THEN PROMOTE
@@ -648,35 +582,34 @@ class QuadTree(Tree):
             if self._name == name:
                 point = self._point
                 if direction == 'N':
-                    val = point[1]
-                    val -= steps
-                    point = point[0], val
+                    point = point[0], point[1] - steps
                 elif direction == 'S':
-                    val = point[1]
-                    val += steps
-                    point = point[0], val
+                    point = point[0], point[1] + steps
                 elif direction == 'W':
-                    val = point[0]
-                    val -= steps
-                    point = val, point[1]
+                    point = point[0] - steps, point[1]
                 else:
-                    val = point[0]
-                    val += steps
-                    point = val, point[1]
+                    point = point[0] + steps, point[1]
 
                 if (not (point[0] <= 2 * self._centre[0] and
                          point[1] <= 2 * self._centre[1])) or \
                         self.contains_point(point):
                     raise OutOfBoundsError
-                elif self._find_region(point) == self.find_region(self._point):
-                    self._point = point
                 else:
-                    self.remove(name)
-                    self.insert(name, point)
+                    self._point = point
+                    return self._point
+        else:
+            if self._nw is not None and name in self._nw:
+                point = self.move(name, direction, steps)
+                self._nw.remove_point(point)
+                self.insert(name, point)
+                return point
+            elif self._ne:
+                pass
+            elif self._sw:
+                pass
+            elif self._se:
+                pass
 
-
-    def _move_helper(self):
-        pass
 
     def move_point(self, point: Tuple[int, int], direction: str, steps: int) -> Optional[Tuple[int, int]]:
         """ Return the new location of the player at point <point> after moving it
@@ -724,21 +657,21 @@ class QuadTree(Tree):
                 final = point[0] - distance, point[1] + distance
             else:
                 final = point[0] + distance, point[1] + distance
-            point_cal_x = [point[0], final[0]]
-            point_cal_y = [point[1], final[1]]
-            if ((min(point_cal_x) <= self._point[0] <= max(point_cal_x) and
-                 min(point_cal_y) <= self._point[1] <= max(point_cal_y))):
+            x_range = [point[0], final[0]]
+            y_range = [point[1], final[1]]
+            if ((min(x_range) <= self._point[0] <= max(x_range) and
+                 min(y_range) <= self._point[1] <= max(y_range))):
                 return [self._name]
             else:
                 return []
         else:
-            lst = [self._ne, self._nw, self._se, self._sw]
-            while None in lst:
-                lst.remove(None)
-            name_lst = []
-            for qd_tree in lst:
-                name_lst.extend(qd_tree.names_in_range(point, direction,
-                                                       distance))
+            subtrees = [self._ne, self._nw, self._se, self._sw]
+            while None in subtrees:
+                subtrees.remove(None)
+            players = []
+            for tree in subtrees:
+                players.extend(tree.names_in_range(point, direction, distance))
+            return players
 
     def size(self) -> int:
         """ Return the number of nodes in <self>
@@ -813,30 +746,6 @@ class QuadTree(Tree):
                     depth = (1 + se_depth) if se_depth is not None else None
                     return depth
 
-
-
-            # self._ne.depth(tree._ne) == 1 and self._nw.depth(tree._nw) and
-            # ne_depth = self._ne
-            # nw_depth =
-            # se_depth
-            # sw_depth
-
-
-
-        # if not isinstance(tree, QuadTree):
-        #     return False
-        # elif self.is_empty():
-        #     return tree.is_empty()
-        # elif self.is_leaf():
-        #     return self._name == tree._name
-        # else:
-        #     if not (self._ne == tree._ne and self._nw == tree._nw and
-        #             self._se == tree._se and self._sw == tree._sw):
-        #         return False
-        #     else:
-        #         pass
-
-
     def is_leaf(self) -> bool:
         """ Return True if <self> has no children
 
@@ -861,7 +770,6 @@ class TwoDTree(Tree):
     """
 
     """
-
     _name: Optional[str]
     _point: Optional[Tuple[int, int]]
     _nw: Tuple[int, int]
@@ -895,15 +803,29 @@ class TwoDTree(Tree):
 
         Runtime: O(n)
         """
-
-
+        if self.is_empty():
+            return False
+        elif self.is_leaf():
+            return self._name == name
+        else:
+            return (self._lt is not None and self._lt.__contains__(name)) \
+                   or (self._gt is not None and self._gt.__contains__(name))
 
     def contains_point(self, point: Tuple[int, int]) -> bool:
         """ Return True if a player at location <point> is stored in this tree.
 
         Runtime: O(log(n))
         """
-        raise NotImplementedError
+        if self.is_empty():
+            return False
+        elif self.is_leaf():
+            return self._point == point
+        else:
+            if (self._split_type == 'x' and point[0] <= self._point[0]) or \
+                    (self._split_type == 'y' and point[1] <= self._point[1]):
+                self._lt.contains_point(point) if self._lt is not None else False
+            else:
+                self._gt.contains_point(point) if self._gt is not None else False
 
     def insert(self, name: str, point: Tuple[int, int]) -> None:
         """Insert a player named <name> into this tree at point <point>.
@@ -915,21 +837,109 @@ class TwoDTree(Tree):
 
         Runtime: O(log(n))
         """
-        raise NotImplementedError
+        if not (self._nw[0] <= point[0] <= self._se[0] and
+                self._nw[1] <= point[1] <= self._se[1]) or \
+                self.contains_point(point):
+            raise OutOfBoundsError
+        elif self.is_empty():
+            self._name = name
+            self._point = point
+        elif self.is_leaf():
+            if self._split_type == 'x' and point[0] <= self._point[0]:  # LX
+                self._lt = TwoDTree(self._nw, (self._point[0], self._se[1]))
+                self._lt._name = name
+                self._lt._point = point
+            elif self._split_type == 'x':           # RX
+                self._gt = TwoDTree((self._point[0], self._nw[1]), self._se)
+                self._gt._name = name
+                self._gt._point = point
+            elif self._split_type == 'y' and point[1] <= self._point[1]:  # LU
+                self._lt = TwoDTree(self._nw, (self._se[0], self._point[1]))
+                self._lt._name = name
+                self._lt._point = point
+            else:                                              # LD
+                self._gt = TwoDTree((self._nw[0], self._point[1]), self._se)
+                self._gt._name = name
+                self._gt._point = point
+        else:
+            if (self._split_type == 'x' and point[0] <= self._point[0]) or \
+                    (self._split_type == 'y' and point[1] <= self._point[1]):
+                self._lt.insert(name, point)
+            else:
+                self._gt.insert(name, point)
 
     def remove(self, name: str) -> None:
         """ Remove information about a player named <name> from this tree.
 
         Runtime: O(n)
         """
-        raise NotImplementedError
+        # if self._name == name:
+        #     s
+        # elif self._lt is not None and name in self._lt:
+        #
+        # elif name in self._gt:
+        #     pass
+        if self.is_empty():
+            pass
+        elif self.is_leaf():
+            if self._name == name:
+                self._name = None
+                self._point = None
+        else:
+            if self._name == name:
+                self.remove_root(name)
+            elif self._lt is not None and self._lt.is_leaf() and self._lt._name == name:
+                self._lt = None
+            elif self._gt is not None and self._gt.is_leaf() and self._gt == name:
+                self._gt = None
+            elif self._lt is not None and name in self._lt:
+                self._lt.remove(name)
+            elif self._gt is not None and name in self._gt:
+                self._gt.remove(name)
+
+
+
+
+
+
+
+                # LEAF CASE
+                # if self._lt._lt is not None and self._lt._lt.is_empty():
+                #     self._lt._lt = None
+                # elif self._lt._lt is not None:
+                #     if self.
+                # if self._gt._gt is not None and self._gt._gt.is_empty():
+                #     self._gt._gt = None
+                # elif self._gt._gt is not None:
+                #     pass
+
+
+
+
+
+
+
+
+                # if self._lt._lt.is_empty():
+                #     self._lt._lt = None
+                # if self._gt._gt.is_empty():
+                #     self._gt._gt = None
+                # if self._lt._lt._name == name:
+                #     pass
+                # elif self._lt._gt._name == name:
+                #     pass
+            # elif self._gt is not None and name in self._gt:
+            #     self._gt.remove(name)
+
+    def _remove_root(self, name):
+        pass
 
     def remove_point(self, point: Tuple[int, int]) -> None:
         """ Remove information about a player at point <point> from this tree.
 
         Runtime: O(log(n))
         """
-        raise NotImplementedError
+        pass
 
     def move(self, name: str, direction: str, steps: int) -> Optional[Tuple[int, int]]:
         """ Return the new location of the player named <name> after moving it
@@ -946,7 +956,7 @@ class TwoDTree(Tree):
         === precondition ===
         direction in ['N', 'S', 'E', 'W']
         """
-        raise NotImplementedError
+        pass
 
     def move_point(self, point: Tuple[int, int], direction: str, steps: int) -> Optional[Tuple[int, int]]:
         """ Return the new location of the player at point <point> after moving it
@@ -967,7 +977,7 @@ class TwoDTree(Tree):
         direction in ['N', 'S', 'E', 'W']
 
         """
-        raise NotImplementedError
+        pass
 
     def names_in_range(self, point: Tuple[int, int], direction: str, distance: int) -> List[str]:
         """ Return a list of names of players whose location is in the <direction>
@@ -983,7 +993,7 @@ class TwoDTree(Tree):
         === precondition ===
         direction in ['NE', 'SE', 'NE', 'SW']
         """
-        raise NotImplementedError
+        pass
 
     def size(self) -> int:
         """ Return the number of nodes in <self>
@@ -1020,6 +1030,7 @@ class TwoDTree(Tree):
 
         Runtime: O(log(n))
         """
+        pass
 
     def is_leaf(self) -> bool:
         """ Return True if <self> has no children
