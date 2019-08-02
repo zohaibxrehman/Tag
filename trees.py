@@ -625,28 +625,38 @@ class QuadTree(Tree):
         if self.is_empty():
             return []
         elif self.is_leaf():
-            if direction == 'NW':
-                final = point[0] - distance, point[1] - distance
-            elif direction == 'NE':
-                final = point[0] + distance, point[1] - distance
-            elif direction == 'SW':
-                final = point[0] - distance, point[1] + distance
-            else:
-                final = point[0] + distance, point[1] + distance
-            x_range = [point[0], final[0]]
-            y_range = [point[1], final[1]]
+            x_range, y_range = _find_xy_range(point, direction, distance)
             if ((min(x_range) <= self._point[0] <= max(x_range) and
                  min(y_range) <= self._point[1] <= max(y_range))):
                 return [self._name]
             else:
                 return []
         else:
-            subtrees = [self._ne, self._nw, self._se, self._sw]
-            while None in subtrees:
-                subtrees.remove(None)
             players = []
-            for tree in subtrees:
-                players.extend(tree.names_in_range(point, direction, distance))
+
+            x_range, y_range = _find_xy_range(point, direction, distance)
+
+            nw = (min(x_range), min(y_range))
+            ne = (max(x_range), min(y_range))
+            sw = (min(x_range), max(y_range))
+            se = (max(x_range), max(y_range))
+            if self._nw is not None and \
+                    nw[0] <= self._centre[0] and nw[1] <= self._centre[1]:  # NW
+                players.extend(self._nw.names_in_range(point,
+                                                       direction, distance))
+            if self._sw is not None and \
+                    sw[0] <= self._centre[0] and sw[1] > self._centre[1]:  # SW
+                players.extend(self._sw.names_in_range(point,
+                                                       direction, distance))
+            if self._ne is not None and \
+                    ne[0] > self._centre[0] and ne[1] <= self._centre[1]:  # NE
+                players.extend(self._ne.names_in_range(point,
+                                                       direction, distance))
+            if self._se is not None and \
+                    se[1] > self._centre[0] and se[1] > self._centre[1]:  # SE
+                players.extend(self._se.names_in_range(point,
+                                                       direction, distance))
+
             return players
 
     def size(self) -> int:
@@ -741,6 +751,16 @@ class QuadTree(Tree):
         """
         return self._name is None and self.is_empty()
 
+def _find_xy_range(point, direction, distance):
+    if direction == 'NW':
+        final = point[0] - distance, point[1] - distance
+    elif direction == 'NE':
+        final = point[0] + distance, point[1] - distance
+    elif direction == 'SW':
+        final = point[0] - distance, point[1] + distance
+    else:
+        final = point[0] + distance, point[1] + distance
+    return (point[0], final[0]), (point[1], final[1])
 
 class TwoDTree(Tree):
     """
@@ -903,7 +923,6 @@ class TwoDTree(Tree):
                 self._point = None
         elif self._name == name:
             self._remove_root()
-            self._fix_values()
         elif self._lt is not None and self._lt.is_leaf() and self._lt._name == name:
             self._lt = None
         elif self._gt is not None and self._gt.is_leaf() and self._gt == name:
@@ -913,6 +932,59 @@ class TwoDTree(Tree):
         elif self._gt is not None and name in self._gt:
             self._gt.remove(name)
 
+    def _remove_root(self):
+        if self._split_type == 'x':
+            if self._lt is not None:
+                replacement_info = self._find_info('big_x')
+                self._name = replacement_info[0]
+                self._point = replacement_info[1]
+                self.remove(replacement_info[0])
+            else:
+                replacement_info = self._find_info('small_x')
+                self._name = replacement_info[0]
+                self._point = replacement_info[1]
+                self.remove_point(replacement_info[1])
+        else:
+            if self._lt is not None:
+                replacement_info = self._find_info('big_y')
+                self._name = replacement_info[0]
+                self._point = replacement_info[1]
+                self.remove_point(replacement_info[1])
+            else:
+                replacement_info = self._find_info('small_y')
+                self._name = replacement_info[0]
+                self._point = replacement_info[1]
+                self.remove_point(replacement_info[1])
+
+    def _find_info(self, request: str) -> Tuple[str, Tuple[int, int]]:
+        nodes = self._collect_all_nodes_info()
+        if request == 'big_x':
+            candidate_nodes = [node[1][0] for node in nodes]
+            candidate_node = max(candidate_nodes)
+        elif request == 'small_x':
+            candidate_nodes = [node[1][0] for node in nodes]
+            candidate_node = min(candidate_nodes)
+        elif request == 'big_y':
+            candidate_nodes = [node[1][1] for node in nodes]
+            candidate_node = max(candidate_nodes)
+        else:
+            candidate_nodes = [node[1][1] for node in nodes]
+            candidate_node = min(candidate_nodes)
+        return nodes[candidate_nodes.index(candidate_node)]
+
+    def _collect_all_nodes_info(self):
+        if self.is_leaf():
+            return [self._name, self._point]
+        elif self._lt is not None and self._gt is not None:
+            return [self._name, self._point] + \
+                   self._lt._collect_all_nodes_info() + \
+                   self._gt._collect_all_nodes_info()
+        elif self._lt is not None:
+            return [self._name, self._point] + \
+                   self._lt._collect_all_nodes_info()
+        elif self._gt is not None:
+            return [self._name, self._point] + \
+                   self._gt._collect_all_nodes_info()
 
     # def _remove_root(self):
     #     # if self.is_leaf():
