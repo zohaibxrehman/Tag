@@ -1,5 +1,8 @@
 from __future__ import annotations
+import random
 from typing import List, Tuple, Optional, Set
+from games import Game
+from trees import OutOfBoundsError
 
 class Player:
     _name: str
@@ -97,7 +100,7 @@ class Player:
         This method should set self._direction to a subset of: ('N', 'S', 'E', 'W')
         """
         d_dict = {}
-        direction_lst = self._game.random.shuffle(['NW', 'NE', 'SE', 'SW'])[:2]
+        direction_lst = random.shuffle(['NW', 'NE', 'SE', 'SW'])[:2]
         for direction in direction_lst:
             d_dict[direction] = [[], []]
             player_lst = self._game.field.names_in_range(self._points, direction,
@@ -113,8 +116,7 @@ class Player:
         t_2 = len(d_dict[direction_lst[0]][0])
         e_2 = len(d_dict[direction_lst[0]][1])
 
-        return self._helper_next_direction(direction_lst, t_1, e_1, t_2, e_2)
-
+        return _helper_next_direction(direction_lst, t_1, e_1, t_2, e_2)
 
     def move(self) -> None:
         """ Move <self> in the direction described by self._direction by the number of steps
@@ -125,7 +127,7 @@ class Player:
         """
         try:
             self._game.field.move(self._name, self._direction, self._speed)
-        except Exception:
+        except OutOfBoundsError:
             self.reverse_direction()
             self._game.field.move(self._name, self._direction, self._speed)
 
