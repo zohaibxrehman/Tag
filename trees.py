@@ -3,6 +3,9 @@ from typing import Optional, List, Tuple, Dict
 
 
 class OutOfBoundsError(Exception):
+    """
+    INSERT
+    """
     pass
 
 
@@ -221,27 +224,31 @@ class QuadTree(Tree):
         if not (point[0] <= 2 * self._centre[0] and point[1] <= 2 *
                 self._centre[1]) or self.contains_point(point):
             raise OutOfBoundsError
-        elif self.is_empty():
+        else:
+            self._insert_helper(name, point)
+
+    def _insert_helper(self, name, point):
+        if self.is_empty():
             self._name = name
             self._point = point
         elif self.is_leaf():
             if self._find_region(self._point) == self._find_region(point):
                 # copying
-                demoted_tree = QuadTree(self._find_centre(self._centre))
+                demoted_tree = QuadTree(self._find_centre(self._point))
                 demoted_tree._name = self._name
                 demoted_tree._point = self._point
 
                 # emptying
                 self._name = None
                 self._point = None
-                demoted_tree.insert(name, point)  # recursion
+                demoted_tree._insert_helper(name, point)  # recursion
 
                 # combine
                 self._insert_region(demoted_tree)
-            else: # REGIONAL BASE CASE
-                old_tree = QuadTree(self._find_centre(self._centre))
-                old_tree._name = self._name
-                old_tree._point = self._point
+            else:  # REGIONAL BASE CASE
+                demoted_tree = QuadTree(self._find_centre(self._point))
+                demoted_tree._name = self._name
+                demoted_tree._point = self._point
 
                 self._name = None
                 self._point = None
@@ -250,25 +257,24 @@ class QuadTree(Tree):
                 new_tree._name = name
                 new_tree._point = point
 
-                self._insert_region(old_tree)
+                self._insert_region(demoted_tree)
                 self._insert_region(new_tree)
-        else:
-            if point[0] <= self._centre[0] and point[1] <= self._centre[1]:  # NW
-                if self._nw is None:
-                    self._nw = QuadTree(self._find_centre(point))
-                self._nw.insert(name, point)
-            elif point[0] <= self._centre[0]:  # SW
-                if self._sw is None:
-                    self._sw = QuadTree(self._find_centre(point))
-                self._sw.insert(name, point)
-            elif point[1] <= self._centre[1]:  # NE
-                if self._ne is None:
-                    self._ne = QuadTree(self._find_centre(point))
-                self._ne.insert(name, point)
-            else:  # SE
-                if self._se is None:
-                    self._se = QuadTree(self._find_centre(point))
-                self._se.insert(name, point)
+        elif point[0] <= self._centre[0] and point[1] <= self._centre[1]:  # NW
+            if self._nw is None:
+                self._nw = QuadTree(self._find_centre(point))
+            self._nw._insert_helper(name, point)
+        elif point[0] <= self._centre[0]:  # SW
+            if self._sw is None:
+                self._sw = QuadTree(self._find_centre(point))
+            self._sw._insert_helper(name, point)
+        elif point[1] <= self._centre[1]:  # NE
+            if self._ne is None:
+                self._ne = QuadTree(self._find_centre(point))
+            self._ne._insert_helper(name, point)
+        else:  # SE
+            if self._se is None:
+                self._se = QuadTree(self._find_centre(point))
+            self._se._insert_helper(name, point)
 
     def _find_region(self, point: Tuple[int, int]) -> str:
         if point[0] <= self._centre[0] and point[1] <= self._centre[1]:  # NW
@@ -315,7 +321,6 @@ class QuadTree(Tree):
             if self._name == name:
                 self._name = None
                 self._point = None
-
         elif self._nw is not None and self._nw.is_leaf() and \
                 self._nw._name == name:
             self._nw = None
@@ -328,7 +333,6 @@ class QuadTree(Tree):
         elif self._se is not None and self._se.is_leaf() and \
                 self._se._name == name:
             self._se = None
-
         elif self._nw is not None and name in self._nw:
             # REMOVE FROM NW -> IF NW EMPTY THEN RID OF IT
             #                -> IF ONLY ONE SUBTREE LEFT THEN CLEAN THEN PROMOTE
@@ -406,7 +410,6 @@ class QuadTree(Tree):
             if self._point == point:
                 self._name = None
                 self._point = None
-
         elif self._nw is not None and self._nw.is_leaf() and \
                 self._nw._point == point:
             self._nw = None
@@ -419,7 +422,6 @@ class QuadTree(Tree):
         elif self._se is not None and self._se.is_leaf() and \
                 self._se._point == point:
             self._se = None
-
         elif point[0] <= self._centre[0] and point[1] <= self._centre[1]:  # NW
             self._nw.remove_point(point)
             if self._nw.is_empty():
@@ -437,7 +439,7 @@ class QuadTree(Tree):
                     self._nw._ne = None
                     self._nw._sw = None
                     self._nw._se = None
-        elif point[0] <= self._centre[0] and point[1] > self._centre[1]:  # SW
+        elif point[0] <= self._centre[0]:  # SW
             self._sw.remove_point(point)
             if self._sw.is_empty():
                 self._sw = None
@@ -452,7 +454,7 @@ class QuadTree(Tree):
                     self._sw._ne = None
                     self._sw._sw = None
                     self._sw._se = None
-        elif point[0] > self._centre[0] and point[1] <= self._centre[1]:  # NE
+        elif point[1] <= self._centre[1]:  # NE
             self._ne.remove_point(point)
             if self._ne.is_empty():
                 self._ne = None
@@ -467,7 +469,7 @@ class QuadTree(Tree):
                     self._ne._ne = None
                     self._ne._sw = None
                     self._ne._se = None
-        elif point[0] > self._centre[0] and point[1] > self._centre[1]:  # SE
+        elif point[1] > self._centre[1]:  # SE
             self._se.remove_point(point)
             if self._se.is_empty():
                 self._se = None
@@ -483,7 +485,8 @@ class QuadTree(Tree):
                     self._se._sw = None
                     self._se._se = None
 
-    def move(self, name: str, direction: str, steps: int) -> Optional[Tuple[int, int]]:
+    def move(self, name: str, direction: str, steps: int) -> \
+            Optional[Tuple[int, int]]:
         """ Return the new location of the player named <name> after moving it
         in the given <direction> by <steps> steps.
 
@@ -502,7 +505,7 @@ class QuadTree(Tree):
             pass
         elif self.is_leaf():
             if self._name == name:
-                new_point = self._calc_point(self._point, direction, steps)
+                new_point = _calc_point(self._point, direction, steps)
                 if not (new_point[0] <= 2 * self._centre[0] and
                         new_point[1] <= 2 * self._centre[1]) \
                         or self.contains_point(new_point):
@@ -513,7 +516,7 @@ class QuadTree(Tree):
         else:
             point = self._find_point(name)  # Proper None ?
             if point is not None:
-                new_point = self._calc_point(point, direction, steps)
+                new_point = _calc_point(point, direction, steps)
                 if not (new_point[0] <= 2 * self._centre[0] and
                         new_point[1] <= 2 * self._centre[1]) \
                         or self.contains_point(new_point):
@@ -542,16 +545,6 @@ class QuadTree(Tree):
             else:
                 return
 
-    def _calc_point(self, point, direction, steps) -> Tuple[int, int]:
-        if direction == 'N':
-            return point[0], point[1] - steps
-        elif direction == 'S':
-            return point[0], point[1] + steps
-        elif direction == 'W':
-            return point[0] - steps, point[1]
-        else:
-            return point[0] + steps, point[1]
-
     def move_point(self, point: Tuple[int, int], direction: str, steps: int) -> Optional[Tuple[int, int]]:
         """ Return the new location of the player at point <point> after moving it
         in the given <direction> by <steps> steps.
@@ -575,7 +568,7 @@ class QuadTree(Tree):
             pass
         elif self.is_leaf():
             if self._point == point:
-                new_point = self._calc_point(self._point, direction, steps)
+                new_point = _calc_point(self._point, direction, steps)
                 if (not (new_point[0] <= 2 * self._centre[0] and
                          new_point[1] <= 2 * self._centre[1])) or \
                         self.contains_point(new_point):
@@ -584,29 +577,38 @@ class QuadTree(Tree):
                     self._point = new_point
                     return self._point
         elif self.contains_point(point):
-            new_point = self._calc_point(point, direction, steps)
+            new_point = _calc_point(point, direction, steps)
             if not (new_point[0] <= 2 * self._centre[0] and
                     new_point[1] <= 2 * self._centre[1]) \
                     or self.contains_point(new_point):
                 raise OutOfBoundsError
             name = self._find_name(point)
-            self.remove_point(point)
-            self.insert(name, new_point)
+            if name is not None:
+                self.remove_point(point)
+                self.insert(name, new_point)
+                return new_point
+            else:
+                return
 
     def _find_name(self, point):
         if self.is_empty():
             pass
         elif self.is_leaf():
-            return self._name
+            if self._point == point:
+                return self._name
+            else:
+                return
         else:
             if point[0] <= self._centre[0] and point[1] <= self._centre[1]:  # NW
-                return self._nw.contains_point(point) # IF NONE ? NOT POSSIBLE ?
+                return self._nw._find_name(point) # IF NONE ? NOT POSSIBLE ?
             elif point[0] <= self._centre[0]:  # SW
-                return self._sw.contains_point(point)
+                return self._sw._find_name(point)
             elif point[1] <= self._centre[1]:  # NE
-                return self._ne.contains_point(point)
-            else:  # SE
-                return self._se.contains_point(point)
+                return self._ne._find_name(point)
+            elif point[1] > self._centre[1]:  # SE
+                return self._se._find_name(point)
+            else:
+                return
 
     def names_in_range(self, point: Tuple[int, int], direction: str, distance: int) -> List[str]:
         """ Return a list of names of players whose location is in the <direction>
@@ -633,13 +635,13 @@ class QuadTree(Tree):
                 return []
         else:
             players = []
-
             x_range, y_range = _find_xy_range(point, direction, distance)
 
             nw = (min(x_range), min(y_range))
             ne = (max(x_range), min(y_range))
             sw = (min(x_range), max(y_range))
             se = (max(x_range), max(y_range))
+
             if self._nw is not None and \
                     nw[0] <= self._centre[0] and nw[1] <= self._centre[1]:  # NW
                 players.extend(self._nw.names_in_range(point,
@@ -656,7 +658,6 @@ class QuadTree(Tree):
                     se[1] > self._centre[0] and se[1] > self._centre[1]:  # SE
                 players.extend(self._se.names_in_range(point,
                                                        direction, distance))
-
             return players
 
     def size(self) -> int:
@@ -669,8 +670,7 @@ class QuadTree(Tree):
         elif self.is_leaf():
             return 1
         else:
-            return 1\
-                   + (self._ne.size() if self._ne is not None else 0)\
+            return 1 + (self._ne.size() if self._ne is not None else 0)\
                    + (self._nw.size() if self._nw is not None else 0)\
                    + (self._se.size() if self._se is not None else 0)\
                    + (self._sw.size() if self._sw is not None else 0)
@@ -699,38 +699,46 @@ class QuadTree(Tree):
 
         Runtime: O(log(n))
         """
-        #  COULD BE 2D
-        #  NAME COMPARISON
-        #  START = 0 OR 1 ?
-        #  is tree literally the tree
         #  ask about repetitive recursion. more runtime but same bound.
         if not isinstance(tree, QuadTree):
             return None
         elif self.is_empty() or self.is_leaf():
-            return 1 if self is tree else None
+            return None
+        elif tree is self:
+            return None
         else:
-            if tree._centre[0] <= self._point[0]:  # WEST
-                if tree._centre[1] <= self._point[1]:  # NW
-                    nw_depth = self._nw.depth(
-                        tree) if self._nw is not None else None
-                    depth = (1 + nw_depth) if nw_depth is not None else None
-                    return depth
-                else:  # SW
-                    sw_depth = self._sw.depth(
-                        tree) if self._sw is not None else None
-                    depth = (1 + sw_depth) if sw_depth is not None else None
-                    return depth
-            else:  # EAST
-                if tree._centre[1] <= self._point[1]:  # NE
-                    ne_depth = self._ne.depth(
-                        tree) if self._nw is not None else None
-                    depth = (1 + ne_depth) if ne_depth is not None else None
-                    return depth
-                else:  # SE
-                    se_depth = self._se.depth(
-                        tree) if self._se is not None else None
-                    depth = (1 + se_depth) if se_depth is not None else None
-                    return depth
+            return self._depth_helper(tree)
+
+    def _depth_helper(self, tree: QuadTree):
+        if self.is_empty() or self.is_leaf():
+            if tree is self:
+                return 1
+            else:
+                return
+        elif tree is self:
+            return 1
+        elif tree._centre[0] <= self._centre[0]:  # WEST
+            if tree._centre[1] <= self._centre[1]:  # NW
+                nw_depth = self._nw._depth_helper(
+                    tree) if self._nw is not None else None
+                depth = (1 + nw_depth) if nw_depth is not None else None
+                return depth
+            else:  # SW
+                sw_depth = self._sw._depth_helper(
+                    tree) if self._sw is not None else None
+                depth = (1 + sw_depth) if sw_depth is not None else None
+                return depth
+        else:  # EAST
+            if tree._centre[1] <= self._centre[1]:  # NE
+                ne_depth = self._ne._depth_helper(
+                    tree) if self._nw is not None else None
+                depth = (1 + ne_depth) if ne_depth is not None else None
+                return depth
+            else:  # SE
+                se_depth = self._se._depth_helper(
+                    tree) if self._se is not None else None
+                depth = (1 + se_depth) if se_depth is not None else None
+                return depth
 
     def is_leaf(self) -> bool:
         """ Return True if <self> has no children
@@ -751,6 +759,18 @@ class QuadTree(Tree):
         """
         return self._name is None and self.is_empty()
 
+
+def _calc_point(point, direction, steps) -> Tuple[int, int]:
+    if direction == 'N':
+        return point[0], point[1] - steps
+    elif direction == 'S':
+        return point[0], point[1] + steps
+    elif direction == 'W':
+        return point[0] - steps, point[1]
+    else:
+        return point[0] + steps, point[1]
+
+
 def _find_xy_range(point, direction, distance):
     if direction == 'NW':
         final = point[0] - distance, point[1] - distance
@@ -761,6 +781,7 @@ def _find_xy_range(point, direction, distance):
     else:
         final = point[0] + distance, point[1] + distance
     return (point[0], final[0]), (point[1], final[1])
+
 
 class TwoDTree(Tree):
     """
