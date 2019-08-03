@@ -815,32 +815,32 @@ class TwoDTree(Tree):
         """
         pass
 
-    def _fix_values(self):
-        if self.is_empty():
-            pass
-        elif self.is_leaf():
-            pass
-        else:
-            if self._lt is not None:
-                if self._split_type == 'x':  # LX
-                    self._lt._split_type = 'y'
-                    self._lt._nw = self._nw
-                    self._lt._se = self._point[0], self._se[1]
-                else:  # LU
-                    self._split_type = 'x'
-                    self._lt._nw = self._nw
-                    self._lt._se = self._se[0], self._point[1]
-                self._lt._fix_values()
-            if self._gt is not None:
-                if self._split_type == 'x':  # RX
-                    self._lt._split_type = 'y'
-                    self._lt._nw = self._point[0], self._nw[1]
-                    self._lt._se = self._se
-                else:  # LD
-                    self._split_type = 'x'
-                    self._lt._nw = self._nw[0], self._point[1]
-                    self._lt._se = self._se
-                self._gt._fix_values()
+    # def _fix_values(self):
+    #     if self.is_empty():
+    #         pass
+    #     elif self.is_leaf():
+    #         pass
+    #     else:
+    #         if self._lt is not None:
+    #             if self._split_type == 'x':  # LX
+    #                 self._lt._split_type = 'y'
+    #                 self._lt._nw = self._nw
+    #                 self._lt._se = self._point[0], self._se[1]
+    #             else:  # LU
+    #                 self._split_type = 'x'
+    #                 self._lt._nw = self._nw
+    #                 self._lt._se = self._se[0], self._point[1]
+    #             self._lt._fix_values()
+    #         if self._gt is not None:
+    #             if self._split_type == 'x':  # RX
+    #                 self._lt._split_type = 'y'
+    #                 self._lt._nw = self._point[0], self._nw[1]
+    #                 self._lt._se = self._se
+    #             else:  # LD
+    #                 self._split_type = 'x'
+    #                 self._lt._nw = self._nw[0], self._point[1]
+    #                 self._lt._se = self._se
+    #             self._gt._fix_values()
 
     def __contains__(self, name: str) -> bool:
         """ Return True if a player named <name> is stored in this tree.
@@ -890,34 +890,31 @@ class TwoDTree(Tree):
                 self._nw[1] <= point[1] <= self._se[1]) or \
                 self.contains_point(point):
             raise OutOfBoundsError
-        elif self.is_empty():
+        else:
+            self._insert_helper(name, point)
+
+    def _insert_helper(self, name: str, point: Tuple[int, int]) -> None:
+        if self.is_empty():
             self._name = name
             self._point = point
         elif self.is_leaf():  # LEAF BASE CASE
-            self._insert_helper(name, point)
+            self._insert_node_helper(name, point)
         else:
             if (self._split_type == 'x' and point[0] <= self._point[0]) or \
                     (self._split_type == 'y' and point[1] <= self._point[1]):
                 if self._lt is not None:
-                    self._lt.insert(name, point)
+                    self._lt._insert_helper(name, point)
                 else:
-                    self._insert_helper(name, point)  # HALF LEAF BASE CASE
+                    self._insert_node_helper(name, point)  # HALF LEAF BASE CASE
             else:
                 if self._gt is not None:
-                    self._gt.insert(name, point)
+                    self._gt._insert_helper(name, point)
                 else:
-                    self._insert_helper(name, point)  # HALF LEAF BASE CASE
+                    self._insert_node_helper(name, point)  # HALF LEAF BASE CASE
 
-    def _insert_helper(self, name, point):
-        if self._split_type == 'x' and point[0] <= self._point[0]:  # LX
-            self._lt = TwoDTree()
-            self._lt._name = name
-            self._lt._point = point
-        elif self._split_type == 'x':  # RX
-            self._gt = TwoDTree()
-            self._gt._name = name
-            self._gt._point = point
-        elif self._split_type == 'y' and point[1] <= self._point[1]:  # LU
+    def _insert_node_helper(self, name, point):
+        if (self._split_type == 'x' and point[0] <= self._point[0]) or\
+                (self._split_type == 'y' and point[1] <= self._point[1]):  # LX
             self._lt = TwoDTree()
             self._lt._name = name
             self._lt._point = point
@@ -944,9 +941,11 @@ class TwoDTree(Tree):
                 self._point = None
         elif self._name == name:
             self._remove_root()
-        elif self._lt is not None and self._lt.is_leaf() and self._lt._name == name:
+        elif self._lt is not None and \
+                self._lt.is_leaf() and self._lt._name == name:
             self._lt = None
-        elif self._gt is not None and self._gt.is_leaf() and self._gt == name:
+        elif self._gt is not None and \
+                self._gt.is_leaf() and self._gt._name == name:
             self._gt = None
         elif self._lt is not None and name in self._lt:
             self._lt.remove(name)
@@ -956,23 +955,23 @@ class TwoDTree(Tree):
     def _remove_root(self):
         if self._split_type == 'x':
             if self._lt is not None:
-                replacement_info = self._find_info('big_x')
+                replacement_info = self._lt._find_info('big_x')
                 self._name = replacement_info[0]
                 self._point = replacement_info[1]
                 self.remove(replacement_info[0])
             else:
-                replacement_info = self._find_info('small_x')
+                replacement_info = self._gt._find_info('small_x')
                 self._name = replacement_info[0]
                 self._point = replacement_info[1]
                 self.remove_point(replacement_info[1])
         else:
             if self._lt is not None:
-                replacement_info = self._find_info('big_y')
+                replacement_info = self._lt._find_info('big_y')
                 self._name = replacement_info[0]
                 self._point = replacement_info[1]
                 self.remove_point(replacement_info[1])
             else:
-                replacement_info = self._find_info('small_y')
+                replacement_info = self._gt._find_info('small_y')
                 self._name = replacement_info[0]
                 self._point = replacement_info[1]
                 self.remove_point(replacement_info[1])
@@ -980,18 +979,18 @@ class TwoDTree(Tree):
     def _find_info(self, request: str) -> Tuple[str, Tuple[int, int]]:
         nodes = self._collect_all_nodes_info()
         if request == 'big_x':
-            candidate_nodes = [node[1][0] for node in nodes]
-            candidate_node = max(candidate_nodes)
+            request_points = [node[1][0] for node in nodes]
+            request_point = max(request_points)
         elif request == 'small_x':
-            candidate_nodes = [node[1][0] for node in nodes]
-            candidate_node = min(candidate_nodes)
+            request_points = [node[1][0] for node in nodes]
+            request_point = min(request_points)
         elif request == 'big_y':
-            candidate_nodes = [node[1][1] for node in nodes]
-            candidate_node = max(candidate_nodes)
+            request_points = [node[1][1] for node in nodes]
+            request_point = max(request_points)
         else:
-            candidate_nodes = [node[1][1] for node in nodes]
-            candidate_node = min(candidate_nodes)
-        return nodes[candidate_nodes.index(candidate_node)]
+            request_points = [node[1][1] for node in nodes]
+            request_point = min(request_points)
+        return nodes[request_points.index(request_point)]
 
     def _collect_all_nodes_info(self):
         if self.is_leaf():
@@ -1041,7 +1040,28 @@ class TwoDTree(Tree):
 
         Runtime: O(log(n))
         """
-        pass
+        if self.is_empty():
+            pass
+        elif self.is_leaf():
+            if self._point == point:
+                self._name = None
+                self._point = None
+        else:
+            if self._point == point:
+                self._remove_root()  # O(n) !!!
+            elif (self._split_type == 'x' and point[0] <= self._point[0]) or \
+                    (self._split_type == 'y' and point[1] <= self._point[1]):
+                if self._lt is not None and self._lt.is_leaf() and \
+                        self._lt._point == point:
+                    self._lt = None
+                elif self._lt is not None:
+                    self._lt.remove_point(point)
+            else:
+                if self._gt is not None and self._gt.is_leaf() and \
+                        self._gt._point == point:
+                    self._gt = None
+                elif self._gt is not None:
+                    self._gt.remove_point(point)
 
     def move(self, name: str, direction: str, steps: int) -> Optional[Tuple[int, int]]:
         """ Return the new location of the player named <name> after moving it
@@ -1058,7 +1078,47 @@ class TwoDTree(Tree):
         === precondition ===
         direction in ['N', 'S', 'E', 'W']
         """
-        pass
+        if self.is_empty():
+            pass
+        elif self.is_leaf():
+            if self._name == name:
+                new_point = _calc_point(self._point, direction, steps)
+                if not (self._nw[0] <= new_point[0] <= self._se[0] and
+                        self._nw[1] <= new_point[1] <= self._se[1]) or \
+                        self.contains_point(new_point):
+                    raise OutOfBoundsError
+                else:
+                    self._point = new_point
+                    return self._point
+        else:
+            point = self._find_point(name)  # Proper None ?
+            if point is not None:
+                new_point = _calc_point(point, direction, steps)
+                if not (self._nw[0] <= new_point[0] <= self._se[0] and
+                        self._nw[1] <= new_point[1] <= self._se[1]) or \
+                        self.contains_point(new_point):
+                    raise OutOfBoundsError
+                self.remove_point(point)
+                self.insert(name, new_point)
+            return point
+
+    def _find_point(self, name):
+        if self.is_empty():
+            pass
+        elif self.is_leaf():
+            if self._name == name:
+                return self._point
+            else:
+                return
+        else:
+            if self._name == name:
+                return self._point
+            elif self._lt is not None and name in self._lt:
+                return self._lt._find_point(name)
+            elif self._gt is not None and name in self._gt:
+                return self._gt._find_point(name)
+            else:
+                return
 
     def move_point(self, point: Tuple[int, int], direction: str, steps: int) -> Optional[Tuple[int, int]]:
         """ Return the new location of the player at point <point> after moving it
@@ -1079,7 +1139,49 @@ class TwoDTree(Tree):
         direction in ['N', 'S', 'E', 'W']
 
         """
-        pass
+        if self.is_empty():
+            pass
+        elif self.is_leaf():
+            if self._point == point:
+                new_point = _calc_point(self._point, direction, steps)
+                if not (self._nw[0] <= new_point[0] <= self._se[0] and
+                        self._nw[1] <= new_point[1] <= self._se[1]) or \
+                        self.contains_point(new_point):
+                    raise OutOfBoundsError
+                else:
+                    self._point = new_point
+                    return self._point
+        elif self.contains_point(point):
+            new_point = _calc_point(point, direction, steps)
+            if not (self._nw[0] <= new_point[0] <= self._se[0] and
+                    self._nw[1] <= new_point[1] <= self._se[1]) or \
+                    self.contains_point(new_point):
+                raise OutOfBoundsError
+            name = self._find_name(point)
+            if name is not None:
+                self.remove_point(point)
+                self.insert(name, new_point)
+                return new_point
+            else:
+                return
+
+    def _find_name(self, point):
+        if self.is_empty():
+            pass
+        elif self.is_leaf():
+            if self._point == point:
+                return self._name
+            else:
+                return
+        elif self._point == point:
+                return self._name
+        elif (self._split_type == 'x' and point[0] <= self._point[0]) or \
+                (self._split_type == 'y' and point[1] <= self._point[1]):
+            return self._lt._find_name(point) \
+                if self._lt is not None else None
+        else:
+            return self._gt._find_name(point) \
+                if self._gt is not None else None
 
     def names_in_range(self, point: Tuple[int, int], direction: str, distance: int) -> List[str]:
         """ Return a list of names of players whose location is in the <direction>
@@ -1144,7 +1246,7 @@ class TwoDTree(Tree):
         Runtime: O(n)
         """
         if self.is_empty():
-            return 1  # FIXME
+            return 1
         elif self.is_leaf():
             return 1
         else:
