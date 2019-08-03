@@ -813,7 +813,32 @@ class TwoDTree(Tree):
         size of the _lt subtree and the size of the _gt subtree for all trees in
         <self>.
         """
-        pass
+        lt_size = self._lt.size() if self._lt is not None else 0
+        gt_size = self._gt.size() if self._gt is not None else 0
+
+        while not(abs(lt_size - gt_size) == 0 or abs(lt_size - gt_size) == 1):
+            name = self._name
+            point = self._point
+            if lt_size > gt_size:
+                self._remove_root_request('promote_left')
+            else:
+                self._remove_root_request('promote_right')
+            self.insert(name, point)
+
+            lt_size = self._lt.size() if self._lt is not None else 0
+            gt_size = self._gt.size() if self._gt is not None else 0
+
+    def _remove_root_request(self, request):
+        if request == 'promote_left':
+            replacement_info = self._lt._find_info('big_x')
+            self._name = replacement_info[0]
+            self._point = replacement_info[1]
+            self.remove(replacement_info[0])
+        else:
+            replacement_info = self._gt._find_info('small_x')
+            self._name = replacement_info[0]
+            self._point = replacement_info[1]
+            self.remove_point(replacement_info[1])
 
     # def _fix_values(self):
     #     if self.is_empty():
@@ -1259,7 +1284,34 @@ class TwoDTree(Tree):
 
         Runtime: O(log(n))
         """
-        pass
+        if not isinstance(tree, TwoDTree):
+            return None
+        elif self.is_empty() or self.is_leaf():
+            return None
+        elif tree is self:
+            return None
+        else:
+            return self._depth_helper(tree)
+
+    def _depth_helper(self, tree: TwoDTree):
+        if self.is_empty() or self.is_leaf():
+            if tree is self:
+                return 1
+            else:
+                return
+        elif tree is self:
+            return 1
+        elif (self._split_type == 'x' and tree._point[0] <= self._point[0]) or \
+                (self._split_type == 'y' and tree._point[1] <= self._point[1]):
+            lt_depth = self._lt._depth_helper(tree) \
+                if self._lt is not None else None
+            depth = (1 + lt_depth) if lt_depth is not None else None
+            return depth
+        else:
+            gt_depth = self._gt._depth_helper(tree) \
+                if self._gt is not None else None
+            depth = (1 + gt_depth) if gt_depth is not None else None
+            return depth
 
     def is_leaf(self) -> bool:
         """ Return True if <self> has no children
