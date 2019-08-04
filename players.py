@@ -4,6 +4,7 @@ from typing import List, Tuple, Optional, Set
 from games import Game
 from trees import OutOfBoundsError
 
+
 class Player:
     _name: str
     _location: Tuple[int, int]
@@ -103,8 +104,8 @@ class Player:
         direction_lst = random.shuffle(['NW', 'NE', 'SE', 'SW'])[:2]
         for direction in direction_lst:
             d_dict[direction] = [[], []]
-            player_lst = self._game.field.names_in_range(self._points, direction,
-                                                         self._vision)
+            player_lst = self._game.field.names_in_range(self._points, direction
+                                                         , self._vision)
             for player in player_lst:
                 if player in self._targets:
                     d_dict[direction][0].append(player)
@@ -113,10 +114,17 @@ class Player:
 
         t_1 = len(d_dict[direction_lst[0]][0])
         e_1 = len(d_dict[direction_lst[0]][1])
-        t_2 = len(d_dict[direction_lst[0]][0])
-        e_2 = len(d_dict[direction_lst[0]][1])
+        t_2 = len(d_dict[direction_lst[1]][0])
+        e_2 = len(d_dict[direction_lst[1]][1])
 
-        return _helper_next_direction(direction_lst, t_1, e_1, t_2, e_2)
+        next_directions = list(set(_helper_next_direction(direction_lst, t_1,
+                                                          e_1, t_2, e_2)))
+
+        if len(next_directions) == 1:
+            self._direction = next_directions[0]
+        else:
+            self._direction = random.choice(next_directions)
+        return set(next_directions)
 
     def move(self) -> None:
         """ Move <self> in the direction described by self._direction by the number of steps
@@ -126,34 +134,36 @@ class Player:
         self should continue to move in this new direction until next_direction is called again.
         """
         try:
-            self._game.field.move(self._name, self._direction, self._speed)
+            new_location = self._game.field.move(self._name, self._direction,
+                                                 self._speed)
+            if new_location is not None:
+                self._location = new_location
         except OutOfBoundsError:
             self.reverse_direction()
-            self._game.field.move(self._name, self._direction, self._speed)
+            new_location = self._game.field.move(self._name, self._direction,
+                                                 self._speed)
+            if new_location is not None:
+                self._location = new_location
 
 
-def _helper_next_direction(direction_lst, t_1, e_1, t_2, e_2)-> Set[str]:
-
+def _helper_next_direction(direction_lst, t_1, e_1, t_2, e_2)-> List[str]:
     if (t_1 - e_1) == (t_2 - e_2):
-        sample_lst = [direction_lst[0][0], direction_lst[0][1],
-                      direction_lst[1][0], direction_lst[1][1]]
-        return set(sample_lst)
+        return [direction_lst[0][0], direction_lst[0][1],
+                direction_lst[1][0], direction_lst[1][1]]
     elif (t_1 - e_1) > (t_2 - e_2):
         if direction_lst[0][0] == direction_lst[1][0]:
-            return set(direction_lst[0][1])
+            return [direction_lst[0][1]]
         elif direction_lst[0][1] == direction_lst[1][1]:
-            return set(direction_lst[0][0])
+            return [direction_lst[0][0]]
         else:
-            sample_lst = direction_lst[0][0], direction_lst[0][1]
-            return set(sample_lst)
+            return [direction_lst[0][0], direction_lst[0][1]]
     else:
         if direction_lst[0][0] == direction_lst[1][0]:
-            return set(direction_lst[1][1])
+            return [direction_lst[1][1]]
         elif direction_lst[0][1] == direction_lst[1][1]:
-            return set(direction_lst[1][0])
+            return [direction_lst[1][0]]
         else:
-            sample_lst = direction_lst[1][0], direction_lst[1][1]
-            return set(sample_lst)
+            return [direction_lst[1][0], direction_lst[1][1]]
 
 
 if __name__ == '__main__':
