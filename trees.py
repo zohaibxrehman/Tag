@@ -981,29 +981,31 @@ class TwoDTree(Tree):
         if self._split_type == 'x':
             if self._lt is not None:
                 replacement_info = self._lt._find_info('big_x')
+                self.remove_point(replacement_info[1])
                 self._name = replacement_info[0]
                 self._point = replacement_info[1]
-                self.remove(replacement_info[0])
             else:
                 replacement_info = self._gt._find_info('small_x')
+                self.remove_point(replacement_info[1])
                 self._name = replacement_info[0]
                 self._point = replacement_info[1]
-                self.remove_point(replacement_info[1])
         else:
             if self._lt is not None:
                 replacement_info = self._lt._find_info('big_y')
+                self.remove_point(replacement_info[1])
                 self._name = replacement_info[0]
                 self._point = replacement_info[1]
-                self.remove_point(replacement_info[1])
             else:
                 replacement_info = self._gt._find_info('small_y')
+                self.remove_point(replacement_info[1])
                 self._name = replacement_info[0]
                 self._point = replacement_info[1]
-                self.remove_point(replacement_info[1])
 
     def _find_info(self, request: str) -> Tuple[str, Tuple[int, int]]:
         nodes = self._collect_all_nodes_info()
         if request == 'big_x':
+            print(nodes)
+            # print([node for node in nodes])
             request_points = [node[1][0] for node in nodes]
             request_point = max(request_points)
         elif request == 'small_x':
@@ -1019,16 +1021,16 @@ class TwoDTree(Tree):
 
     def _collect_all_nodes_info(self):
         if self.is_leaf():
-            return [self._name, self._point]
+            return [(self._name, self._point)]
         elif self._lt is not None and self._gt is not None:
-            return [self._name, self._point] + \
+            return [(self._name, self._point)] + \
                    self._lt._collect_all_nodes_info() + \
                    self._gt._collect_all_nodes_info()
         elif self._lt is not None:
-            return [self._name, self._point] + \
+            return [(self._name, self._point)] + \
                    self._lt._collect_all_nodes_info()
         elif self._gt is not None:
-            return [self._name, self._point] + \
+            return [(self._name, self._point)] + \
                    self._gt._collect_all_nodes_info()
 
     # def _remove_root(self):
@@ -1225,28 +1227,37 @@ class TwoDTree(Tree):
         if self.is_empty():
             return []
         elif self.is_leaf():
-            if direction == 'NW':
-                final = point[0] - distance, point[1] - distance
-            elif direction == 'NE':
-                final = point[0] + distance, point[1] - distance
-            elif direction == 'SW':
-                final = point[0] - distance, point[1] + distance
-            else:
-                final = point[0] + distance, point[1] + distance
-            x_range = [point[0], final[0]]
-            y_range = [point[1], final[1]]
+            x_range, y_range = _find_xy_range(point, direction, distance)
             if ((min(x_range) <= self._point[0] <= max(x_range) and
                  min(y_range) <= self._point[1] <= max(y_range))):
                 return [self._name]
             else:
                 return []
         else:
-            subtrees = [self._lt, self._gt]
-            while None in subtrees:
-                subtrees.remove(None)
             players = []
-            for tree in subtrees:
-                players.extend(tree.names_in_range(point, direction, distance))
+            x_range, y_range = _find_xy_range(point, direction, distance)
+
+            nw = (min(x_range), min(y_range))
+            ne = (max(x_range), min(y_range))
+            sw = (min(x_range), max(y_range))
+            se = (max(x_range), max(y_range))
+
+            if self._nw is not None and \
+                    nw[0] <= self._centre[0] and nw[1] <= self._centre[1]:  # NW
+                players.extend(self._nw.names_in_range(point,
+                                                       direction, distance))
+            if self._sw is not None and \
+                    sw[0] <= self._centre[0] and sw[1] > self._centre[1]:  # SW
+                players.extend(self._sw.names_in_range(point,
+                                                       direction, distance))
+            if self._ne is not None and \
+                    ne[0] > self._centre[0] and ne[1] <= self._centre[1]:  # NE
+                players.extend(self._ne.names_in_range(point,
+                                                       direction, distance))
+            if self._se is not None and \
+                    se[1] > self._centre[0] and se[1] > self._centre[1]:  # SE
+                players.extend(self._se.names_in_range(point,
+                                                       direction, distance))
             return players
 
     def size(self) -> int:
@@ -1330,5 +1341,12 @@ class TwoDTree(Tree):
 
 
 if __name__ == '__main__':
-    import python_ta
-    python_ta.check_all(config={'extra-imports': ['typing']})
+    t = TwoDTree((0,0), (200,200))
+    t.insert('a', (30,100))
+    t.insert('b', (150, 80))
+    t.insert('c', (150, 20))
+    t.insert('d', (20, 20))
+
+
+    # import python_ta
+    # python_ta.check_all(config={'extra-imports': ['typing']})
