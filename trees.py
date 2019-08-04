@@ -831,14 +831,14 @@ class TwoDTree(Tree):
     def _remove_root_request(self, request):
         if request == 'promote_left':
             replacement_info = self._lt._find_info('big_x')
+            self.remove_point(replacement_info[1])
             self._name = replacement_info[0]
             self._point = replacement_info[1]
-            self.remove(replacement_info[0])
         else:
             replacement_info = self._gt._find_info('small_x')
+            self.remove_point(replacement_info[1])
             self._name = replacement_info[0]
             self._point = replacement_info[1]
-            self.remove_point(replacement_info[1])
 
     # def _fix_values(self):
     #     if self.is_empty():
@@ -1004,8 +1004,6 @@ class TwoDTree(Tree):
     def _find_info(self, request: str) -> Tuple[str, Tuple[int, int]]:
         nodes = self._collect_all_nodes_info()
         if request == 'big_x':
-            print(nodes)
-            # print([node for node in nodes])
             request_points = [node[1][0] for node in nodes]
             request_point = max(request_points)
         elif request == 'small_x':
@@ -1241,6 +1239,11 @@ class TwoDTree(Tree):
             ne = (max(x_range), min(y_range))
             sw = (min(x_range), max(y_range))
 
+            x_range, y_range = _find_xy_range(point, direction, distance)
+            if ((min(x_range) <= self._point[0] <= max(x_range) and
+                 min(y_range) <= self._point[1] <= max(y_range))):
+                players.append(self._name)
+
             if self._split_type == 'x':
                 if self._lt is not None and nw[0] <= self._point[0]:
                     players.extend(self._lt.names_in_range(point,
@@ -1338,11 +1341,12 @@ class TwoDTree(Tree):
 
 
 if __name__ == '__main__':
-    t = TwoDTree((0,0), (200,200))
-    t.insert('a', (30,100))
+    t = TwoDTree((0, 0), (200, 200))
+    t.insert('a', (30, 100))
     t.insert('b', (150, 80))
     t.insert('c', (150, 20))
     t.insert('d', (20, 20))
+    t.insert('e', (140, 100))
 
 
     # import python_ta
