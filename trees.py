@@ -816,7 +816,7 @@ class TwoDTree(Tree):
         lt_size = self._lt.size() if self._lt is not None else 0
         gt_size = self._gt.size() if self._gt is not None else 0
 
-        while not(abs(lt_size - gt_size) == 0 or abs(lt_size - gt_size) == 1):
+        while abs(lt_size - gt_size) > 1:
             name = self._name
             point = self._point
             if lt_size > gt_size:
@@ -827,6 +827,11 @@ class TwoDTree(Tree):
 
             lt_size = self._lt.size() if self._lt is not None else 0
             gt_size = self._gt.size() if self._gt is not None else 0
+
+        if self._lt is not None:
+            self._lt.balance()
+        if self._gt is not None:
+            self._gt.balance()
 
     def _remove_root_request(self, request):
         if request == 'promote_left':
@@ -943,10 +948,12 @@ class TwoDTree(Tree):
             self._lt = TwoDTree()
             self._lt._name = name
             self._lt._point = point
+            self._lt._split_type = 'y' if self._split_type == 'x' else 'x'
         else:  # LD
             self._gt = TwoDTree()
             self._gt._name = name
             self._gt._point = point
+            self._gt._split_type = 'y' if self._split_type == 'x' else 'x'
 
     # self._nw, (self._point[0], self._se[1])
     # (self._point[0], self._nw[1]), self._se
