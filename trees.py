@@ -1240,24 +1240,21 @@ class TwoDTree(Tree):
             nw = (min(x_range), min(y_range))
             ne = (max(x_range), min(y_range))
             sw = (min(x_range), max(y_range))
-            se = (max(x_range), max(y_range))
 
-            if self._nw is not None and \
-                    nw[0] <= self._centre[0] and nw[1] <= self._centre[1]:  # NW
-                players.extend(self._nw.names_in_range(point,
-                                                       direction, distance))
-            if self._sw is not None and \
-                    sw[0] <= self._centre[0] and sw[1] > self._centre[1]:  # SW
-                players.extend(self._sw.names_in_range(point,
-                                                       direction, distance))
-            if self._ne is not None and \
-                    ne[0] > self._centre[0] and ne[1] <= self._centre[1]:  # NE
-                players.extend(self._ne.names_in_range(point,
-                                                       direction, distance))
-            if self._se is not None and \
-                    se[1] > self._centre[0] and se[1] > self._centre[1]:  # SE
-                players.extend(self._se.names_in_range(point,
-                                                       direction, distance))
+            if self._split_type == 'x':
+                if self._lt is not None and nw[0] <= self._point[0]:
+                    players.extend(self._lt.names_in_range(point,
+                                                           direction, distance))
+                if self._gt is not None and ne[0] >= self._point[0]:
+                    players.extend(self._gt.names_in_range(point,
+                                                           direction, distance))
+            else:
+                if self._lt is not None and nw[1] <= self._point[1]:
+                    players.extend(self._lt.names_in_range(point,
+                                                           direction, distance))
+                if self._gt is not None and sw[1] >= self._point[1]:
+                    players.extend(self._gt.names_in_range(point,
+                                                           direction, distance))
             return players
 
     def size(self) -> int:
