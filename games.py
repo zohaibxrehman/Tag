@@ -97,19 +97,25 @@ class Tag(Game):
             self._players[player2].increase_points(1)
             self._players[player2].ignore_enemy(player1)
             self._players[player1].ignore_target(player2)
+
             self._players[player1].select_enemy(player2)
+            self._players[player2].select_target(player1)
             for player in self._players[player1].get_targets():
                 self._players[player1].ignore_target(player)
                 self._players[player2].select_target(player)
+
             self._it = player2
         elif player2 == self._it:
             self._players[player1].increase_points(1)
             self._players[player1].ignore_enemy(player2)
             self._players[player2].ignore_target(player1)
+
             self._players[player2].select_enemy(player1)
+            self._players[player1].select_target(player2)
             for player in self._players[player2].get_targets():
                 self._players[player2].ignore_target(player)
                 self._players[player1].select_target(player)
+
             self._it = player1
 
     def check_for_winner(self) -> Optional[str]:
@@ -210,28 +216,34 @@ class ZombieTag(Game):
 
     def handle_collision(self, player1: str, player2: str) -> None:
         """ Perform some action when <player1> and <player2> collide """
+
         if player1 in self._humans and player2 in self._humans:
             self._humans[player1].reverse_direction()
             self._humans[player2].reverse_direction()
         elif player1 in self._zombies and player2 in self._humans:
             self._zombies[player1].reverse_direction()
             self._humans[player2].reverse_direction()
+
             self._zombies[player2] = self._humans[player2]
             self._zombies[player2].set_speed(1)
-            self._humans[player2].ignore_enemy(player1)
-            del self._humans[player2]
+            self._humans.pop(player2)
+
+            self._zombies[player2].ignore_enemy(player1)
             self._zombies[player1].ignore_target(player2)
+
             for target in self._zombies[player1].get_targets():
                 self._zombies[player2].select_target(target)
-
         elif player2 in self._zombies and player1 in self._humans:
             self._humans[player1].reverse_direction()
             self._zombies[player2].reverse_direction()
+
             self._zombies[player1] = self._humans[player1]
             self._zombies[player1].set_speed(1)
-            self._humans[player1].ignore_enemy(player2)
-            del self._humans[player1]
+            self._humans.pop(player1)
+
+            self._zombies[player1].ignore_enemy(player2)
             self._zombies[player2].ignore_target(player1)
+
             for target in self._zombies[player2].get_targets():
                 self._zombies[player1].select_target(target)
         else:
@@ -311,15 +323,15 @@ class EliminationTag(Game):
     def handle_collision(self, player1: str, player2: str) -> None:
         """ Perform some action when <player1> and <player2> collide """
         if player1 in self._players[player2].get_targets():
+            self._players[player2].ignore_target(player1)
             for targets in self._players[player1].get_targets():
                 self._players[player2].select_target(targets)
-            self._players[player2].ignore_target(player1)
             del self._players[player1]
             self._players[player2].increase_points(1)
         elif player2 in self._players[player1].get_targets():
+            self._players[player1].ignore_target(player2)
             for targets in self._players[player2].get_targets():
                 self._players[player1].select_target(targets)
-            self._players[player1].ignore_target(player2)
             del self._players[player2]
             self._players[player1].increase_points(1)
         else:
