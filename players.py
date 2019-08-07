@@ -137,23 +137,16 @@ class Player:
         direction_lst = random.shuffle(['NW', 'NE', 'SE', 'SW'])[:2]
         d_to_player_dict = {'N': [0], 'S': [0], 'E': [0], 'W': [0]}
         for direction in direction_lst:
-<<<<<<< HEAD
             d_1 = direction[0]
             d_2 = direction[1]
             player_lst = self._game.field.names_in_range(self._points, direction
                                                          , self._vision)
 
-=======
-            d_dict[direction] = [[], []]
-            player_lst = self._game.field.names_in_range(self._points, direction
-                                                         , self._vision)
->>>>>>> 4b8cb44fcad4d4b1c12432fda94f0f24cbb3f37f
             for player in player_lst:
                 if player in self._targets:
                     d_to_player_dict[d_1] += 1
                     d_to_player_dict[d_2] += 1
                 elif player in self._enemies:
-<<<<<<< HEAD
                     d_to_player_dict[_reverse(d_1)] += 1
                     d_to_player_dict[_reverse(d_2)] += 1
 
@@ -168,23 +161,6 @@ class Player:
                 max_lst.append(direction)
         self._direction = random.choice(max_lst)
         return set(max_lst)
-=======
-                    d_dict[direction][1].append(player)
-
-        t_1 = len(d_dict[direction_lst[0]][0])
-        e_1 = len(d_dict[direction_lst[0]][1])
-        t_2 = len(d_dict[direction_lst[1]][0])
-        e_2 = len(d_dict[direction_lst[1]][1])
-
-        next_directions = list(set(_helper_next_direction(direction_lst, t_1,
-                                                          e_1, t_2, e_2)))
-
-        if len(next_directions) == 1:
-            self._direction = next_directions[0]
-        else:
-            self._direction = random.choice(next_directions)
-        return set(next_directions)
->>>>>>> 4b8cb44fcad4d4b1c12432fda94f0f24cbb3f37f
 
     def move(self) -> None:
         """ Move <self> in the direction described by self._direction by the
@@ -196,13 +172,9 @@ class Player:
         until next_direction is called again.
         """
         try:
-            new_location = self._game.field.move(self._name, self._direction,
-                                                 self._speed)
-            if new_location is not None:
-                self._location = new_location
+            self._game.field.move(self._name, self._direction, self._speed)
         except OutOfBoundsError:
             self.reverse_direction()
-<<<<<<< HEAD
 
 
 def _reverse(direction: str)-> str:
@@ -214,32 +186,6 @@ def _reverse(direction: str)-> str:
         return 'W'
     else:
         return 'E'
-=======
-            new_location = self._game.field.move(self._name, self._direction,
-                                                 self._speed)
-            if new_location is not None:
-                self._location = new_location
-
-
-def _helper_next_direction(direction_lst, t_1, e_1, t_2, e_2)-> List[str]:
-    if (t_1 - e_1) == (t_2 - e_2):
-        return [direction_lst[0][0], direction_lst[0][1],
-                direction_lst[1][0], direction_lst[1][1]]
-    elif (t_1 - e_1) > (t_2 - e_2):
-        if direction_lst[0][0] == direction_lst[1][0]:
-            return [direction_lst[0][1]]
-        elif direction_lst[0][1] == direction_lst[1][1]:
-            return [direction_lst[0][0]]
-        else:
-            return [direction_lst[0][0], direction_lst[0][1]]
-    else:
-        if direction_lst[0][0] == direction_lst[1][0]:
-            return [direction_lst[1][1]]
-        elif direction_lst[0][1] == direction_lst[1][1]:
-            return [direction_lst[1][0]]
-        else:
-            return [direction_lst[1][0], direction_lst[1][1]]
->>>>>>> 4b8cb44fcad4d4b1c12432fda94f0f24cbb3f37f
 
 
 if __name__ == '__main__':
