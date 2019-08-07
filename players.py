@@ -4,7 +4,35 @@ from typing import List, Tuple, Optional, Set
 from games import Game
 from trees import OutOfBoundsError
 
+
 class Player:
+    """A Player playing in a game.
+
+    === Private Attributes ===
+    _name : the name of the player
+    _location: 	a tuple of x-coordinates and y-coordinates holding the current
+    location of the player on the field
+
+    _colour: the colour used to draw the player object
+    _vision: the distance a player can see in any direction
+    _speed: the number of steps a player can move in a single turn
+    _game: a reference to an instance of a Game class
+    _points: the number of points the player has
+    _targets: a list of player names that this player should move towards
+    _enemies: a list of player names that this player should avoid
+    _direction: a string indicating the direction the player is currently moving
+
+    === Representation Invariants ===
+    - The _location of a player must fall within the boundaries set by the
+     _game.field attribute
+    - _vision, _points and _speed must be positive or zero
+    - the _colour attribute must be one of purple, green, or random
+    - _points should be zero immediately after the class is initialized
+    - no string that appears in _targets should also appear in _enemies
+    - no string that appears in _enemies should also appear in _targets
+    - _direction should be one of ('N', 'S', 'E', 'W')
+
+    """
     _name: str
     _location: Tuple[int, int]
     _colour: str
@@ -18,6 +46,8 @@ class Player:
 
     def __init__(self, name: str, vision: int, speed: int, game: Game,
                  colour: str, location: Tuple[int, int]) -> None:
+        """Initialize a new Player containing name, vision, speed game, colour
+        and location. """
         self._name = name
         self._location = location
         self._colour = colour
@@ -30,7 +60,8 @@ class Player:
         self._direction = ''
 
     def set_colour(self, colour: str) -> None:
-        """ Change the colour of self """
+        """ Change the colour of self
+        """
         colour_lst = ['purple', 'green', 'random']
         if colour in colour_lst:
             self._colour = colour
@@ -74,7 +105,8 @@ class Player:
         return self.get_enemies().copy()
 
     def reverse_direction(self) -> None:
-        """ Update the direction so that <self> will move in the opposite direction """
+        """ Update the direction so that <self> will move in the opposite
+        direction """
         if self._direction == 'N':
             self._direction = 'S'
         elif self._direction == 'S':
@@ -90,70 +122,70 @@ class Player:
             self._speed = speed
 
     def next_direction(self) -> Set[str]:
-        """ Update the direction to move the next time self.move is called. This direction should be
-        determined by the relative number of visible targets and enemies.
+        """ Update the direction to move the next time self.move is called.
+
+        This direction should be determined by the relative number of visible
+        targets and enemies.
 
         Return a set of all equally good directions to move towards.
 
         This method should call the names_in_range Tree method exactly twice.
 
-        This method should set self._direction to a subset of: ('N', 'S', 'E', 'W')
+        This method should set self._direction to a subset of: ('N', 'S', 'E',
+        'W')
         """
-        d_dict = {}
         direction_lst = random.shuffle(['NW', 'NE', 'SE', 'SW'])[:2]
+        d_to_player_dict = {'N': [0], 'S': [0], 'E': [0], 'W': [0]}
         for direction in direction_lst:
-            d_dict[direction] = [[], []]
-            player_lst = self._game.field.names_in_range(self._points, direction,
-                                                         self._vision)
+            d_1 = direction[0]
+            d_2 = direction[1]
+            player_lst = self._game.field.names_in_range(self._points, direction
+                                                         , self._vision)
+
             for player in player_lst:
                 if player in self._targets:
-                    d_dict[direction][0].append(player)
+                    d_to_player_dict[d_1] += 1
+                    d_to_player_dict[d_2] += 1
                 elif player in self._enemies:
-                    d_dict[direction][1].append(player)
+                    d_to_player_dict[_reverse(d_1)] += 1
+                    d_to_player_dict[_reverse(d_2)] += 1
 
-        t_1 = len(d_dict[direction_lst[0]][0])
-        e_1 = len(d_dict[direction_lst[0]][1])
-        t_2 = len(d_dict[direction_lst[0]][0])
-        e_2 = len(d_dict[direction_lst[0]][1])
-
-        return _helper_next_direction(direction_lst, t_1, e_1, t_2, e_2)
+        max_val = 0
+        max_lst = []
+        for direction in d_to_player_dict:
+            val = d_to_player_dict[direction]
+            if val > max_val:
+                max_val = val
+                max_lst = [direction]
+            elif val == max_val:
+                max_lst.append(direction)
+        self._direction = random.choice(max_lst)
+        return set(max_lst)
 
     def move(self) -> None:
-        """ Move <self> in the direction described by self._direction by the number of steps
-        described by self._speed. Make sure to keep track of the updated location of self.
+        """ Move <self> in the direction described by self._direction by the
+        number of steps described by self._speed. Make sure to keep track of the
+        updated location of self.
 
-        If the movement would move self out of bounds, move self in the opposite direction instead.
-        self should continue to move in this new direction until next_direction is called again.
+        If the movement would move self out of bounds, move self in the opposite
+        direction instead. self should continue to move in this new direction
+        until next_direction is called again.
         """
         try:
             self._game.field.move(self._name, self._direction, self._speed)
         except OutOfBoundsError:
             self.reverse_direction()
-            self._game.field.move(self._name, self._direction, self._speed)
 
 
-def _helper_next_direction(direction_lst, t_1, e_1, t_2, e_2)-> Set[str]:
-
-    if (t_1 - e_1) == (t_2 - e_2):
-        sample_lst = [direction_lst[0][0], direction_lst[0][1],
-                      direction_lst[1][0], direction_lst[1][1]]
-        return set(sample_lst)
-    elif (t_1 - e_1) > (t_2 - e_2):
-        if direction_lst[0][0] == direction_lst[1][0]:
-            return set(direction_lst[0][1])
-        elif direction_lst[0][1] == direction_lst[1][1]:
-            return set(direction_lst[0][0])
-        else:
-            sample_lst = direction_lst[0][0], direction_lst[0][1]
-            return set(sample_lst)
+def _reverse(direction: str)-> str:
+    if direction == 'N':
+        return 'S'
+    elif direction == 'S':
+        return 'N'
+    elif direction == 'E':
+        return 'W'
     else:
-        if direction_lst[0][0] == direction_lst[1][0]:
-            return set(direction_lst[1][1])
-        elif direction_lst[0][1] == direction_lst[1][1]:
-            return set(direction_lst[1][0])
-        else:
-            sample_lst = direction_lst[1][0], direction_lst[1][1]
-            return set(sample_lst)
+        return 'E'
 
 
 if __name__ == '__main__':

@@ -4,7 +4,9 @@ from typing import Dict, Union, Optional
 from players import Player
 from trees import QuadTree, TwoDTree
 
+
 class Game:
+    """An abstract class for a Game."""
 
     def handle_collision(self, player1: str, player2: str) -> None:
         """ Perform some action when <player1> and <player2> collide """
@@ -15,7 +17,32 @@ class Game:
         won the game, or None if no player has won yet """
         raise NotImplementedError
 
+
 class Tag(Game):
+    """A Game of Tag.
+
+    In this game there is one player who is ‘it’. Every other player should try
+    to avoid the player who is ‘it’. The player who is ‘it’ should try to tag
+    any other player by colliding with them. After _duration seconds have
+    passed, any player who is not currently ‘it’ but has been tagged is
+    eliminated until only the winner is left.
+
+    === Public Attribute ===
+    field: a tree that stores the location of all players in _players which can
+    be either QuadTree or TwoDTree
+
+    === Private Attribute ===
+    _players: a dictionary (key-value pair) mapping the names of players to
+    their Player instances,i.e, the key is names of players and value is their
+    Player instance
+
+    _it: the name of the player in _players that is currently ‘it’
+    _duration: the amount of time before the game eliminates some more players
+
+    === Representation Invariant ===
+    - In this game there is one player who is ‘it’.
+    - Every other player should try to avoid the player who is ‘it’.
+    """
     _players: Dict[str, Player]
     field: Union[QuadTree, TwoDTree]
     _it: str
@@ -98,14 +125,45 @@ class Tag(Game):
         for loser in to_del_lst:
             self.field.remove(loser)
             del self._players[loser]
-        if isinstance(self.field, TwoDTree):
-            self.field.balance()
-        if len(winner_lst) >= 2 and self._it in winner_lst:
+        # if isinstance(self.field, TwoDTree):
+        #     self.field.balance()
+        if len(winner_lst) == 2 and self._it in winner_lst:
             winner_lst.remove(self._it)
-        return winner_lst
+        if len(winner_lst) == 1:
+            return winner_lst[0]
+        else:
+            return None
 
 
 class ZombieTag(Game):
+    """A Game of ZombieTag.
+
+    In this game, one person starts out as a zombie and everyone else starts out
+    as a human. All zombies try to chase humans and convert them into zombies.
+    All humans try to avoid the zombies and not get converted. At the end of
+    the game, if there are any humans left, the humans win. Otherwise the
+    zombies win.
+
+    === Public Attribute ===
+    field: a tree that stores the location of all players in _players which can
+    be either QuadTree or TwoDTree
+
+    === Private Attribute ===
+    _humans: a dictionary (key-value pair) mapping the names of human players to
+    their Player instances,i.e, the key is names of human players and value is
+    their Player instance
+
+    _zombies: a dictionary (key-value pair) mapping the names of zombie players
+    to their Player instances,i.e, the key is names of zombie players and value
+    is their Player instance
+
+    _it: the name of the player in _players that is currently ‘it’
+    _duration: The amount of time before the game ends and a winner is decided
+
+    === Representation Invariants ===
+    - In this game, one person starts out as a zombie and everyone else starts
+    out as a human.
+    """
     _humans: Dict[str, Player]
     _zombies: Dict[str, Player]
     field: Union[QuadTree, TwoDTree]
@@ -190,6 +248,26 @@ class ZombieTag(Game):
 
 
 class EliminationTag(Game):
+    """A Game of EliminationTag.
+
+    In this game, every player has exactly one other player they are trying to
+    tag. Once a player tags their target, their target is eliminated and they
+    now try to tag their target’s target.
+
+    === Public Attribute ===
+    field: a tree that stores the location of all players in _players which can
+    be either QuadTree or TwoDTree
+
+    === Private Attribute ===
+    _players: a dictionary (key-value pair) mapping the names of players to
+    their Player instances,i.e, the key is names of players and value is their
+    Player instance
+
+    === Representation Invariants ===
+    - In this game, every player has exactly one other player they are trying to
+    tag. Once a player tags their target, their target is eliminated and they
+    now try to tag their target’s target.
+    """
     _players: Dict[str, Player]
     field: Union[QuadTree, TwoDTree]
 
