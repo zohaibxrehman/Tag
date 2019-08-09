@@ -212,8 +212,11 @@ class Player:
         until next_direction is called again.
         """
         try:
-            self._location = self._game.field.move(self._name, self._direction,
-                                                   self._speed)
+            loc = self._game.field.move(self._name, self._direction, self._speed
+                                        )
+            if loc is not None:
+                self._location = loc
+
         except OutOfBoundsError:
             self.reverse_direction()
 
