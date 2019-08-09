@@ -52,17 +52,14 @@ class Tag(Game):
                  duration: int, max_speed: int, max_vision: int) -> None:
 
         player_list = list(range(n_players))
+        p = 0
         location_lst = []
-        while len(location_lst) == 0 or any(location_lst.count(x) > 1 for x in location_lst):
-            p = 0
-            location_lst = []
-            while p < n_players:
-                if isinstance(field_type, QuadTree):
-                    pass
-                # location_lst.append( (random.randint(0, 2*getattr(self.field, _centre))
-                #                       random.randint(0, 100)))
-                else:
-                    pass
+        while p < n_players:
+            loc = (random.randint(0, 500), random.randint(0, 500))
+            if loc not in location_lst:
+                location_lst.append((random.randint(0, 500),
+                                     random.randint(0, 500)))
+                p += 1
 
         self._players = {}
         self.field = field_type
@@ -102,6 +99,8 @@ class Tag(Game):
                 self._players[player1].ignore_target(player)
                 self._players[player2].select_target(player)
             self._it = player2
+            self._players[player2].set_colour('purple')
+            self._players[player1].set_colour('green')
         elif player2 == self._it:
             self._players[player1].increase_points(1)
             self._players[player1].ignore_enemy(player2)
@@ -111,6 +110,8 @@ class Tag(Game):
                 self._players[player2].ignore_target(player)
                 self._players[player1].select_target(player)
             self._it = player1
+            self._players[player1].set_colour('purple')
+            self._players[player2].set_colour('green')
 
     def check_for_winner(self) -> Optional[str]:
         """ Return the name of the player or group of players that have
@@ -125,8 +126,7 @@ class Tag(Game):
         for loser in to_del_lst:
             self.field.remove(loser)
             del self._players[loser]
-        # if isinstance(self.field, TwoDTree):
-        #     self.field.balance()
+
         if len(winner_lst) == 2 and self._it in winner_lst:
             winner_lst.remove(self._it)
         if len(winner_lst) == 1:
@@ -173,18 +173,14 @@ class ZombieTag(Game):
                  duration: int, max_speed: int, max_vision: int) -> None:
 
         player_list = list(range(n_players))
+        p = 0
         location_lst = []
-        while len(location_lst) == 0 or any(
-                location_lst.count(x) > 1 for x in location_lst):
-            p = 0
-            location_lst = []
-            while p < n_players + 1:
-                if isinstance(field_type, QuadTree):
-                    pass
-                # location_lst.append( (random.randint(0, 2*getattr(self.field, _centre))
-                #                       random.randint(0, 100)))
-                else:
-                    pass
+        while p <= n_players:
+            loc = (random.randint(0, 500), random.randint(0, 500))
+            if loc not in location_lst:
+                location_lst.append((random.randint(0, 500),
+                                     random.randint(0, 500)))
+                p += 1
 
         self._humans = {}
         self._zombies = {}
@@ -223,6 +219,7 @@ class ZombieTag(Game):
             self._zombies[player1].ignore_target(player2)
             for target in self._zombies[player1].get_targets():
                 self._zombies[player2].select_target(target)
+            self._zombies[player2].set_colour('purple')
 
         elif player2 in self._zombies and player1 in self._humans:
             self._humans[player1].reverse_direction()
@@ -234,6 +231,7 @@ class ZombieTag(Game):
             self._zombies[player2].ignore_target(player1)
             for target in self._zombies[player2].get_targets():
                 self._zombies[player1].select_target(target)
+            self._zombies[player1].set_colour('purple')
         else:
             self._zombies[player1].reverse_direction()
             self._zombies[player2].reverse_direction()
@@ -275,18 +273,14 @@ class EliminationTag(Game):
                  max_speed: int, max_vision: int) -> None:
 
         player_list = list(range(n_players))
+        p = 0
         location_lst = []
-        while len(location_lst) == 0 or any(
-                location_lst.count(x) > 1 for x in location_lst):
-            p = 0
-            location_lst = []
-            while p < n_players:
-                if isinstance(field_type, QuadTree):
-                    pass
-                # location_lst.append( (random.randint(0, 2*getattr(self.field, _centre))
-                #                       random.randint(0, 100)))
-                else:
-                    pass
+        while p < n_players:
+            loc = (random.randint(0, 500), random.randint(0, 500))
+            if loc not in location_lst:
+                location_lst.append((random.randint(0, 500),
+                                     random.randint(0, 500)))
+                p += 1
 
         self._players = {}
         self.field = field_type
@@ -347,5 +341,6 @@ class EliminationTag(Game):
 if __name__ == '__main__':
     import python_ta
     python_ta.check_all(config={'extra-imports': ['random', 'typing', 'players',
-                                                  'trees']})
+                                                  'trees'],
+                                'disable': ['R0913']})
 

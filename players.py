@@ -1,7 +1,6 @@
 from __future__ import annotations
 import random
 from typing import List, Tuple, Optional, Set
-from games import Game
 from trees import OutOfBoundsError
 
 
@@ -61,33 +60,78 @@ class Player:
 
     def set_colour(self, colour: str) -> None:
         """ Change the colour of self
+
+        >>> g = Tag(3, QuadTree((100, 100)), 10, 1, 1)
+        >>> player = Player('4', 1, 1, g, 'green', (67,89))
+        >>> player.set_colour('random')
+        >>> player._colour
+        'random'
         """
         colour_lst = ['purple', 'green', 'random']
         if colour in colour_lst:
             self._colour = colour
 
     def increase_points(self, points: int) -> None:
-        """ Increase <self>'s points by <points> """
+        """ Increase <self>'s points by <points>
+
+        >>> g = Tag(3, QuadTree((100, 100)), 10, 1, 1)
+        >>> player = Player('4', 1, 1, g, 'green', (67,89))
+        >>> player.increase_points(1)
+        >>> player._points
+        1
+        """
         new_val = self._points + points
         if new_val >= 0:
             self._points = new_val
 
     def get_points(self) -> int:
-        """ Return the number of points <self> currently has """
+        """ Return the number of points <self> currently has
+
+        >>> g = Tag(3, QuadTree((100, 100)), 10, 1, 1)
+        >>> player = Player('4', 1, 1, g, 'green', (67,89))
+        >>> player.increase_points(1)
+        >>> player.get_points()
+        1
+        """
         return self._points
 
     def select_target(self, name: str) -> None:
-        """ Add a target to <self>'s target list """
+        """ Add a target to <self>'s target list
+
+        >>> g = Tag(3, QuadTree((100, 100)), 10, 1, 1)
+        >>> player1 = Player('4', 1, 1, g, 'green', (67,89))
+        >>> player2 = Player('5', 1, 1, g, 'green', (47,29))
+        >>> player1.select_target(player2)
+        >>> player1._targets
+        ['player2']
+        """
         if name not in self._targets and name not in self._enemies:
             self._targets.append(name)
 
     def ignore_target(self, name: str) -> None:
-        """ Remove a target from <self>'s target list """
+        """ Remove a target from <self>'s target list
+
+        >>> g = Tag(3, QuadTree((100, 100)), 10, 1, 1)
+        >>> player1 = Player('4', 1, 1, g, 'green', (67,89))
+        >>> player2 = Player('5', 1, 1, g, 'green', (47,29))
+        >>> player1.select_target(player2)
+        >>> player1._targets
+        ['player2']
+        >>> player1.ignore_target('player2')
+        >>> player1._targets
+        []
+        """
         if name in self._targets:
             self._targets.remove(name)
 
     def get_targets(self) -> List[str]:
-        """ Return a copy of the list of target names """
+        """ Return a copy of the list of target names
+
+        >>> g = Tag(3, QuadTree((100, 100)), 10, 1, 1)
+        >>> player1 = Player('4', 1, 1, g, 'green', (67,89))
+        >>> player2 = Player('5', 1, 1, g, 'green', (47,29))
+        >>> player1.select_target(player2)
+        """
         return self._targets.copy()
 
     def select_enemy(self, name: str) -> None:
@@ -178,6 +222,13 @@ class Player:
 
 
 def _reverse(direction: str)-> str:
+    """ Return a string of opposite direction to < direction >.
+
+    >>> _reverse('N')
+    'S'
+    >>> _reverse('W')
+    'E'
+    """
     if direction == 'N':
         return 'S'
     elif direction == 'S':
@@ -190,4 +241,6 @@ def _reverse(direction: str)-> str:
 
 if __name__ == '__main__':
     import python_ta
-    python_ta.check_all(config={'extra-imports': ['typing']})
+    python_ta.check_all(config={'extra-imports': ['typing', 'random', 'game',
+                                                  'trees'],
+                                'disable': ['R0913']})
