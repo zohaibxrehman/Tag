@@ -56,7 +56,7 @@ class Player:
         self._points = 0
         self._targets = []
         self._enemies = []
-        self._direction = ''
+        self._direction = random.choice(['N', 'S', 'W', 'E'])
 
     def set_colour(self, colour: str) -> None:
         """ Change the colour of self
@@ -146,7 +146,7 @@ class Player:
 
     def get_enemies(self) -> List[str]:
         """ Return a copy of the list of enemy names """
-        return self.get_enemies().copy()
+        return self._enemies.copy()
 
     def reverse_direction(self) -> None:
         """ Update the direction so that <self> will move in the opposite
@@ -157,7 +157,7 @@ class Player:
             self._direction = 'N'
         elif self._direction == 'E':
             self._direction = 'W'
-        else:
+        elif self._direction == 'W':
             self._direction = 'E'
 
     def set_speed(self, speed: int) -> None:

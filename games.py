@@ -242,7 +242,7 @@ class ZombieTag(Game):
         if len(self._humans) > 0:
             return 'humans'
         else:
-            return 'zombie'
+            return 'zombies'
 
 
 class EliminationTag(Game):
