@@ -1363,20 +1363,30 @@ class TwoDTree(Tree):
                 elif self._gt is not None:
                     self._gt.remove_point(point)
 
-    def move(self, name: str, direction: str, steps: int) -> Optional[Tuple[int, int]]:
+    def move(self, name: str, direction: str, steps: int) -> \
+            Optional[Tuple[int, int]]:
         """ Return the new location of the player named <name> after moving it
         in the given <direction> by <steps> steps.
 
         Raise an OutOfBoundsError if this would move the player named
         <name> out of bounds (before moving the player).
 
-        Raise an OutOfBoundsError if moving the player would place the player at exactly the
-        same coordinates of another player in the Tree (before moving the player).
+        Raise an OutOfBoundsError if moving the player would place the player at
+        exactly the same coordinates of another player in the Tree
+        (before moving the player).
 
         Runtime: O(n)
 
         === precondition ===
         direction in ['N', 'S', 'E', 'W']
+
+        >>> t = TwoDTree((0, 0), (100, 100))
+        >>> t.insert('a', (150, 150))
+        >>> t.move('a', 'N', 10)
+        >>> t.contains_point((150, 140))
+        True
+        >>> t.contains_point((250, 240))
+        False
         """
         if self.is_empty():
             pass
@@ -1400,7 +1410,7 @@ class TwoDTree(Tree):
                     raise OutOfBoundsError
                 self.remove_point(point)
                 self.insert(name, new_point)
-            return point
+            return new_point
 
     def _find_point(self, name):
         if self.is_empty():
@@ -1438,6 +1448,13 @@ class TwoDTree(Tree):
         === precondition ===
         direction in ['N', 'S', 'E', 'W']
 
+        >>> t = TwoDTree((0, 0), (100, 100))
+        >>> t.insert('a', (150, 150))
+        >>> t.move_point((150, 150), 'N', 10)
+        >>> t.contains_point((150, 140))
+        True
+        >>> t.contains_point((150, 150+))
+        False
         """
         if self.is_empty():
             pass
@@ -1484,18 +1501,21 @@ class TwoDTree(Tree):
                 if self._gt is not None else None
 
     def names_in_range(self, point: Tuple[int, int], direction: str, distance: int) -> List[str]:
-        """ Return a list of names of players whose location is in the <direction>
-        relative to <point> and whose location is within <distance> along both the x and y axis.
+        """ Return a list of names of players whose location is in the
+        <direction> relative to <point> and whose location is within <distance>
+        along both the x and y axis.
 
-        For example: names_in_range((100, 100), 'SE', 10) should return the names of all
-        the players south east of (100, 100) and within 10 steps in either direction.
-        In other words, find all players whose location is in the box with corners at:
-        (100, 100) (110, 100) (100, 110) (110, 110)
+        For example: names_in_range((100, 100), 'SE', 10) should return the
+        names of all the players south east of (100, 100) and within 10 steps in
+        either direction. In other words, find all players whose location is in
+        the box with corners at: (100, 100) (110, 100) (100, 110) (110, 110)
 
         Runtime: faster than O(n) when distance is small
 
         === precondition ===
         direction in ['NE', 'SE', 'NE', 'SW']
+
+
         """
         if self.is_empty():
             return []
@@ -1539,6 +1559,16 @@ class TwoDTree(Tree):
         """ Return the number of nodes in <self>
 
         Runtime: O(n)
+
+        >>> t = TwoDTree((0, 0), (100, 100))
+        >>> t.size()
+        1
+        >>> t.insert('a', (25, 25))
+        >>> t.size()
+        1
+        >>> t.insert('b', (75, 75))
+        >>> t.size()
+        2
         """
         if self.is_empty():
             return 1
@@ -1555,6 +1585,19 @@ class TwoDTree(Tree):
         tree to the node at the greatest depth in this tree.
 
         Runtime: O(n)
+
+        >>> t = TwoDTree((0, 0), (100, 100))
+        >>> t.height()
+        1
+        >>> t.insert('a', (25, 25))
+        >>> t.height()
+        1
+        >>> t.insert('b', (75, 75))
+        >>> t.height()
+        2
+        >>> t.insert('c', (125, 125))
+        >>> t.height()
+        2
         """
         if self.is_empty():
             return 1
@@ -1565,14 +1608,19 @@ class TwoDTree(Tree):
                             self._gt.height() if self._gt is not None else 0])
 
     def depth(self, tree: Tree) -> Optional[int]:
-        """ Return the depth of the subtree <tree> relative to <self>. Return None
-        if <tree> is not a descendant of <self>
+        """ Return the depth of the subtree <tree> relative to <self>.
+        Return None if <tree> is not a descendant of <self>
 
         Runtime: O(log(n))
 
         >>> t = TwoDTree((0, 0), (100, 100))
         >>> t.insert('a', (25, 25))
-        >>> b = TwoDTree()
+        >>> t.insert('b', (125, 125))
+        >>> a = t._lt
+        >>> t.depth(a)
+        1
+        >>> t.depth(t)
+        0
         """
         if not isinstance(tree, TwoDTree):
             return None
@@ -1584,6 +1632,9 @@ class TwoDTree(Tree):
             return self._depth_helper(tree)
 
     def _depth_helper(self, tree: TwoDTree):
+        """
+        Helper method for depth using parameter tree.
+        """
         if self.is_empty() or self.is_leaf():
             if tree is self:
                 return 0
@@ -1607,6 +1658,16 @@ class TwoDTree(Tree):
         """ Return True if <self> has no children
 
         Runtime: O(1)
+
+        >>> t = TwoDTree((0, 0), (100, 100))
+        >>> t.is_leaf()
+        True
+        >>> t.insert('a', (150, 150))
+        >>> t.is_leaf()
+        True
+        >>> t.insert('b', (50, 50))
+        >>> t.is_leaf()
+        False
         """
         return self._lt is None and self._gt is None
 
@@ -1615,6 +1676,13 @@ class TwoDTree(Tree):
         of any players.
 
         Runtime: O(1)
+
+        >>> t = TwoDTree((0, 0), (100, 100))
+        >>> t.is_empty()
+        True
+        >>> t.insert('a', (150, 150))
+        >>> t.is_empty()
+        False
         """
         return self._name is None and self.is_leaf()
 
