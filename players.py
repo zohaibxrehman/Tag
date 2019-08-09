@@ -151,14 +151,7 @@ class Player:
     def reverse_direction(self) -> None:
         """ Update the direction so that <self> will move in the opposite
         direction """
-        if self._direction == 'N':
-            self._direction = 'S'
-        elif self._direction == 'S':
-            self._direction = 'N'
-        elif self._direction == 'E':
-            self._direction = 'W'
-        elif self._direction == 'W':
-            self._direction = 'E'
+        self._direction = _reverse(self._direction)
 
     def set_speed(self, speed: int) -> None:
         """ Update <self>'s speed to <speed> """
@@ -181,7 +174,7 @@ class Player:
         d_lst = ['NW', 'NE', 'SE', 'SW']
         random.shuffle(d_lst)
         direction_lst = d_lst[:2]
-        d_to_player_dict = {'N': [0], 'S': [0], 'E': [0], 'W': [0]}
+        d_to_player_dict = {'N': 0, 'S': 0, 'E': 0, 'W': 0}
         for direction in direction_lst:
             d_1 = direction[0]
             d_2 = direction[1]
@@ -239,7 +232,7 @@ def _reverse(direction: str)-> str:
         return 'N'
     elif direction == 'E':
         return 'W'
-    else:
+    elif direction == 'W':
         return 'E'
 
 
