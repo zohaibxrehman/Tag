@@ -88,8 +88,8 @@ class Tree:
 
     def move_point(self, point: Tuple[int, int], direction: str, steps: int) ->\
             Optional[Tuple[int, int]]:
-        """ Return the new location of the player at point <point> after moving it
-        in the given <direction> by <steps> steps.
+        """ Return the new location of the player at point <point> after moving
+        it in the given <direction> by <steps> steps.
 
         Raise an OutOfBoundsError if this would move the player at point
         <point> out of bounds (before moving the player).
@@ -269,7 +269,7 @@ class QuadTree(Tree):
         elif self.is_leaf():
             return self._point == point
         else:
-            if point[0] <= self._centre[0] and point[1] <= self._centre[1]:  # NW
+            if point[0] <= self._centre[0] and point[1] <= self._centre[1]: # NW
                 return self._nw.contains_point(point) \
                     if self._nw is not None else False
             elif point[0] <= self._centre[0]:  # SW
@@ -375,7 +375,8 @@ class QuadTree(Tree):
         """
         Insert <tree> in its respective region.
         """
-        if tree._point[0] <= self._centre[0] and tree._point[1] <= self._centre[1]:  # NW
+        if tree._point[0] <= self._centre[0] and \
+                tree._point[1] <= self._centre[1]:  # NW
             self._nw = tree
         elif tree._point[0] <= self._centre[0]:  # SW
             self._sw = tree
@@ -626,7 +627,7 @@ class QuadTree(Tree):
         False
         """
         if self.is_empty():
-            pass
+            return None
         elif self.is_leaf():
             if self._name == name:
                 new_point = _calc_point(self._point, direction, steps)
@@ -648,6 +649,7 @@ class QuadTree(Tree):
                 self.remove_point(point)
                 self.insert(name, new_point)
                 return new_point
+            return None
 
     def _find_point(self, name: str) -> Optional[Tuple[int, int]]:
         """
@@ -741,7 +743,8 @@ class QuadTree(Tree):
             else:
                 return
         else:
-            if point[0] <= self._centre[0] and point[1] <= self._centre[1]:  # NW
+            if point[0] <= self._centre[0] and point[1] <= self._centre[1]:
+                # NW
                 return self._nw._find_name(point) # IF NONE ? NOT POSSIBLE ?
             elif point[0] <= self._centre[0]:  # SW
                 return self._sw._find_name(point)
@@ -837,8 +840,8 @@ class QuadTree(Tree):
     def height(self) -> int:
         """ Return the height of <self>
 
-        Height is measured as the number of nodes in the path from the root of this
-        tree to the node at the greatest depth in this tree.
+        Height is measured as the number of nodes in the path from the root of
+        this tree to the node at the greatest depth in this tree.
 
         Runtime: O(n)
 
@@ -859,8 +862,8 @@ class QuadTree(Tree):
                             self._sw.height() if self._sw is not None else 0])
 
     def depth(self, tree: Tree) -> Optional[int]:
-        """Return the depth of the subtree <tree> relative to <self>. Return None
-        if <tree> is not a descendant of <self>
+        """Return the depth of the subtree <tree> relative to <self>. Return
+        None if <tree> is not a descendant of <self>
 
         Runtime: O(log(n))
         >>> q = QuadTree((50, 50))
@@ -871,6 +874,7 @@ class QuadTree(Tree):
         >>> q._se = b
         >>> q.depth(b)
         1
+        >>> q.depth(q)
         """
         #  ask about repetitive recursion. more runtime but same bound.
         if not isinstance(tree, QuadTree):
@@ -928,8 +932,8 @@ class QuadTree(Tree):
         #  use all. remove is none.
 
     def is_empty(self) -> bool:
-        """ Return True if <self> does not store any information about the location
-        of any players.
+        """ Return True if <self> does not store any information about the
+        location of any players.
 
         Runtime: O(1)
         """
@@ -1306,8 +1310,10 @@ class TwoDTree(Tree):
     #         self._name, self._point, self._lt, self._gt = \
     #             self._lt._name, self._lt._point, self._lt._lt, self._lt._gt
     #     else:
-    #         promoted_tree_info = self._extract_max_info() # TRY ALL THE REMOVAL WORK HERE
-    #         self.remove_point(promoted_tree_info[1]) # may fail silently if promotion took place in previous step
+    #         promoted_tree_info = self._extract_max_info() # TRY ALL THE
+    #         REMOVAL WORK HERE
+    #         self.remove_point(promoted_tree_info[1]) # may fail silently if
+    #         promotion took place in previous step
     #         # OR safer self.remove(promoted_tree_info[0])
     #         self._name, self._point = \
     #             promoted_tree_info[0], promoted_tree_info[1]
@@ -1322,7 +1328,8 @@ class TwoDTree(Tree):
     #         info = self._name, self._point
     #         if self._lt is not None:
     #             self._name, self._point, self._lt, self._gt = \
-    #                 self._lt._name, self._lt._point, self._lt._lt, self._lt._gt
+    #                 self._lt._name,
+    #                 self._lt._point, self._lt._lt, self._lt._gt
     #         return info
 
     def remove_point(self, point: Tuple[int, int]) -> None:
@@ -1381,11 +1388,12 @@ class TwoDTree(Tree):
         direction in ['N', 'S', 'E', 'W']
 
         >>> t = TwoDTree((0, 0), (100, 100))
-        >>> t.insert('a', (150, 150))
+        >>> t.insert('a', (75, 75))
         >>> t.move('a', 'N', 10)
-        >>> t.contains_point((150, 140))
+        (75, 65)
+        >>> t.contains_point((75, 65))
         True
-        >>> t.contains_point((250, 240))
+        >>> t.contains_point((75, 75))
         False
         """
         if self.is_empty():
@@ -1413,6 +1421,9 @@ class TwoDTree(Tree):
             return new_point
 
     def _find_point(self, name):
+        """
+        Helper method for finding the name associated to a point in the tree.
+        """
         if self.is_empty():
             pass
         elif self.is_leaf():
@@ -1430,18 +1441,21 @@ class TwoDTree(Tree):
             else:
                 return
 
-    def move_point(self, point: Tuple[int, int], direction: str, steps: int) -> Optional[Tuple[int, int]]:
-        """ Return the new location of the player at point <point> after moving it
-        in the given <direction> by <steps> steps.
+    def move_point(self, point: Tuple[int, int], direction: str, steps: int) ->\
+            Optional[Tuple[int, int]]:
+        """ Return the new location of the player at point <point> after moving
+        it in the given <direction> by <steps> steps.
 
         Raise an OutOfBoundsError if this would move the player at point
         <point> out of bounds (before moving the player).
 
-        Raise an OutOfBoundsError if moving the player would place the player at exactly the
-        same coordinates of another player in the Tree (before moving the player).
+        Raise an OutOfBoundsError if moving the player would place the player at
+        exactly the same coordinates of another player in the Tree
+        (before moving the player).
 
-        Moving a point may require the tree to be reorganized. This method should do
-        the minimum amount of tree reorganization possible to move the given point properly.
+        Moving a point may require the tree to be reorganized. This method
+        should do the minimum amount of tree reorganization possible to move the
+        given point properly.
 
         Runtime: O(log(n))
 
@@ -1449,11 +1463,12 @@ class TwoDTree(Tree):
         direction in ['N', 'S', 'E', 'W']
 
         >>> t = TwoDTree((0, 0), (100, 100))
-        >>> t.insert('a', (150, 150))
-        >>> t.move_point((150, 150), 'N', 10)
-        >>> t.contains_point((150, 140))
+        >>> t.insert('a', (75, 75))
+        >>> t.move_point((75, 75), 'N', 10)
+        (75, 65)
+        >>> t.contains_point((75, 65))
         True
-        >>> t.contains_point((150, 150+))
+        >>> t.contains_point((75, 75))
         False
         """
         if self.is_empty():
@@ -1483,6 +1498,9 @@ class TwoDTree(Tree):
                 return
 
     def _find_name(self, point):
+        """
+        Helper method for finding the name corresponding to a point in the tree.
+        """
         if self.is_empty():
             pass
         elif self.is_leaf():
@@ -1500,7 +1518,8 @@ class TwoDTree(Tree):
             return self._gt._find_name(point) \
                 if self._gt is not None else None
 
-    def names_in_range(self, point: Tuple[int, int], direction: str, distance: int) -> List[str]:
+    def names_in_range(self, point: Tuple[int, int], direction: str,
+                       distance: int) -> List[str]:
         """ Return a list of names of players whose location is in the
         <direction> relative to <point> and whose location is within <distance>
         along both the x and y axis.
@@ -1515,7 +1534,11 @@ class TwoDTree(Tree):
         === precondition ===
         direction in ['NE', 'SE', 'NE', 'SW']
 
-
+        >>> t = TwoDTree((0, 0), (100, 100))
+        >>> t.insert('a', (25, 25))
+        >>> t.insert('b', (75, 75))
+        >>> t.names_in_range((40, 40), 'NW', 20)
+        ['a']
         """
         if self.is_empty():
             return []
@@ -1581,8 +1604,8 @@ class TwoDTree(Tree):
     def height(self) -> int:
         """ Return the height of <self>
 
-        Height is measured as the number of nodes in the path from the root of this
-        tree to the node at the greatest depth in this tree.
+        Height is measured as the number of nodes in the path from the root of
+        this tree to the node at the greatest depth in this tree.
 
         Runtime: O(n)
 
@@ -1595,9 +1618,9 @@ class TwoDTree(Tree):
         >>> t.insert('b', (75, 75))
         >>> t.height()
         2
-        >>> t.insert('c', (125, 125))
+        >>> t.insert('c', (50, 50))
         >>> t.height()
-        2
+        3
         """
         if self.is_empty():
             return 1
@@ -1615,12 +1638,11 @@ class TwoDTree(Tree):
 
         >>> t = TwoDTree((0, 0), (100, 100))
         >>> t.insert('a', (25, 25))
-        >>> t.insert('b', (125, 125))
-        >>> a = t._lt
+        >>> t.insert('b', (75, 75))
+        >>> a = t._gt
         >>> t.depth(a)
         1
         >>> t.depth(t)
-        0
         """
         if not isinstance(tree, TwoDTree):
             return None
@@ -1662,7 +1684,7 @@ class TwoDTree(Tree):
         >>> t = TwoDTree((0, 0), (100, 100))
         >>> t.is_leaf()
         True
-        >>> t.insert('a', (150, 150))
+        >>> t.insert('a', (75, 75))
         >>> t.is_leaf()
         True
         >>> t.insert('b', (50, 50))
@@ -1672,15 +1694,15 @@ class TwoDTree(Tree):
         return self._lt is None and self._gt is None
 
     def is_empty(self) -> bool:
-        """ Return True if <self> does not store any information about the location
-        of any players.
+        """ Return True if <self> does not store any information about the
+        location of any players.
 
         Runtime: O(1)
 
         >>> t = TwoDTree((0, 0), (100, 100))
         >>> t.is_empty()
         True
-        >>> t.insert('a', (150, 150))
+        >>> t.insert('a', (75, 75))
         >>> t.is_empty()
         False
         """
@@ -1688,7 +1710,7 @@ class TwoDTree(Tree):
 
 
 if __name__ == '__main__':
-    pass
+    # pass
     # t = TwoDTree((0, 0), (200, 200))
     # t.insert('a', (30, 100))
     # t.insert('b', (150, 80))
@@ -1702,8 +1724,8 @@ if __name__ == '__main__':
     # q.insert('b', (150, 150))
     # q.insert('c', (120, 180))
 
-    # import python_ta
-    # python_ta.check_all(config={'extra-imports': ['typing']})
+    import python_ta
+    python_ta.check_all(config={'extra-imports': ['typing']})
 
     # import doctest
     # doctest.testmod()
