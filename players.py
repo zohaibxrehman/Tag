@@ -56,7 +56,7 @@ class Player:
         self._points = 0
         self._targets = []
         self._enemies = []
-        self._direction = random.choice(['N', 'S', 'W', 'E'])
+        self._direction = random.choice(['N', 'S', 'E', 'W'])
 
     def set_colour(self, colour: str) -> None:
         """ Change the colour of self
@@ -178,13 +178,16 @@ class Player:
         This method should set self._direction to a subset of: ('N', 'S', 'E',
         'W')
         """
-        direction_lst = random.shuffle(['NW', 'NE', 'SE', 'SW'])[:2]
+        d_lst = ['NW', 'NE', 'SE', 'SW']
+        random.shuffle(d_lst)
+        direction_lst = d_lst[:2]
         d_to_player_dict = {'N': [0], 'S': [0], 'E': [0], 'W': [0]}
         for direction in direction_lst:
             d_1 = direction[0]
             d_2 = direction[1]
-            player_lst = self._game.field.names_in_range(self._points, direction
-                                                         , self._vision)
+            player_lst = self._game.field.names_in_range(self._location,
+                                                         direction, self._vision
+                                                         )
 
             for player in player_lst:
                 if player in self._targets:
@@ -216,7 +219,8 @@ class Player:
         until next_direction is called again.
         """
         try:
-            self._game.field.move(self._name, self._direction, self._speed)
+            self._location = self._game.field.move(self._name, self._direction,
+                                                   self._speed)
         except OutOfBoundsError:
             self.reverse_direction()
 
