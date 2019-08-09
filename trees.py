@@ -152,6 +152,7 @@ class Tree:
 
         Runtime: O(log(n))
         """
+        raise NotImplementedError
 
     def is_leaf(self) -> bool:
         """ Return True if <self> has no children
@@ -374,11 +375,6 @@ class QuadTree(Tree):
         """
         Insert <tree> in its respective region.
         """
-        print(tree)
-        print(self)
-        print(tree._point)
-        print(self._centre)
-
         if tree._point[0] <= self._centre[0] and tree._point[1] <= self._centre[1]:  # NW
             self._nw = tree
         elif tree._point[0] <= self._centre[0]:  # SW
@@ -892,11 +888,11 @@ class QuadTree(Tree):
         """
         if self.is_empty() or self.is_leaf():
             if tree is self:
-                return 1
+                return 0
             else:
                 return
         elif tree is self:
-            return 1
+            return 0
         elif tree._centre[0] <= self._centre[0]:  # WEST
             if tree._centre[1] <= self._centre[1]:  # NW
                 nw_depth = self._nw._depth_helper(
@@ -1590,11 +1586,11 @@ class TwoDTree(Tree):
     def _depth_helper(self, tree: TwoDTree):
         if self.is_empty() or self.is_leaf():
             if tree is self:
-                return 1
+                return 0
             else:
                 return
         elif tree is self:
-            return 1
+            return 0
         elif (self._split_type == 'x' and tree._point[0] <= self._point[0]) or \
                 (self._split_type == 'y' and tree._point[1] <= self._point[1]):
             lt_depth = self._lt._depth_helper(tree) \
@@ -1624,6 +1620,7 @@ class TwoDTree(Tree):
 
 
 if __name__ == '__main__':
+    pass
     # t = TwoDTree((0, 0), (200, 200))
     # t.insert('a', (30, 100))
     # t.insert('b', (150, 80))
@@ -1643,6 +1640,6 @@ if __name__ == '__main__':
     # import doctest
     # doctest.testmod()
 
-    tree = QuadTree((250, 250))
-    tree.insert('jon', (250, 250))
-    tree.insert('joe', (250, 240))
+    # tree = QuadTree((250, 250))
+    # tree.insert('jon', (250, 250))
+    # tree.insert('joe', (250, 240))
