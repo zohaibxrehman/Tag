@@ -320,13 +320,12 @@ class QuadTree(Tree):
                 demoted_tree._name = self._name
                 demoted_tree._point = self._point
 
+                # combine
+                self._insert_region(demoted_tree)
                 # emptying
                 self._name = None
                 self._point = None
                 demoted_tree._insert_helper(name, point)  # recursion
-
-                # combine
-                self._insert_region(demoted_tree)
             else:  # REGIONAL BASE CASE
                 demoted_tree = QuadTree(self._find_centre(self._point))
                 demoted_tree._name = self._name
@@ -375,6 +374,11 @@ class QuadTree(Tree):
         """
         Insert <tree> in its respective region.
         """
+        print(tree)
+        print(self)
+        print(tree._point)
+        print(self._centre)
+
         if tree._point[0] <= self._centre[0] and tree._point[1] <= self._centre[1]:  # NW
             self._nw = tree
         elif tree._point[0] <= self._centre[0]:  # SW
@@ -1569,7 +1573,7 @@ class TwoDTree(Tree):
         if <tree> is not a descendant of <self>
 
         Runtime: O(log(n))
-3
+
         >>> t = TwoDTree((0, 0), (100, 100))
         >>> t.insert('a', (25, 25))
         >>> b = TwoDTree()
@@ -1636,5 +1640,9 @@ if __name__ == '__main__':
     # import python_ta
     # python_ta.check_all(config={'extra-imports': ['typing']})
 
-    import doctest
-    doctest.testmod()
+    # import doctest
+    # doctest.testmod()
+
+    tree = QuadTree((250, 250))
+    tree.insert('jon', (250, 250))
+    tree.insert('joe', (250, 240))
