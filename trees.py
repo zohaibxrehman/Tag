@@ -4,8 +4,8 @@ Department of Computer Science,
 University of Toronto
 === Module Description ===
 This file contains the Tree abstract class and two concrete implementations of
-this abstract class. The two implementations are QuadTree and TwoDTree which a
-kd-tree of dimension 2.
+this abstract class. The two implementations are QuadTree and TwoDTree which is
+a kd-tree of dimension 2.
 """
 
 from __future__ import annotations
@@ -457,7 +457,7 @@ class QuadTree(Tree):
                     self._nw._ne = None
                     self._nw._sw = None
                     self._nw._se = None
-        elif self._ne is not None and name in self._ne:
+        elif self._ne is not None and name in self._ne:git
             self._ne.remove(name)
             if self._ne.is_empty():
                 self._ne = None
@@ -638,6 +638,7 @@ class QuadTree(Tree):
                 else:
                     self._point = new_point
                     return self._point
+            return None
         else:
             point = self._find_point(name)  # Proper None ?
             if point is not None:
@@ -656,12 +657,12 @@ class QuadTree(Tree):
         Return the coordinates of the <name> in self.
         """
         if self.is_empty():
-            pass
+            return None
         elif self.is_leaf():
             if self._name == name:
                 return self._point
             else:
-                return
+                return None
         else:
             if self._nw is not None and name in self._nw:
                 return self._nw._find_point(name)
@@ -672,7 +673,7 @@ class QuadTree(Tree):
             elif self._se is not None and name in self._se:
                 return self._se._find_point(name)
             else:
-                return
+                return None
 
     def move_point(self, point: Tuple[int, int], direction: str, steps: int) ->\
             Optional[Tuple[int, int]]:
@@ -706,7 +707,7 @@ class QuadTree(Tree):
         False
         """
         if self.is_empty():
-            pass
+            return None
         elif self.is_leaf():
             if self._point == point:
                 new_point = _calc_point(self._point, direction, steps)
@@ -717,6 +718,7 @@ class QuadTree(Tree):
                 else:
                     self._point = new_point
                     return self._point
+            return None
         elif self.contains_point(point):
             new_point = _calc_point(point, direction, steps)
             if not (new_point[0] <= 2 * self._centre[0] and
@@ -729,19 +731,21 @@ class QuadTree(Tree):
                 self.insert(name, new_point)
                 return new_point
             else:
-                return
+                return None
+        else:
+            return None
 
-    def _find_name(self, point):
+    def _find_name(self, point: Tuple[int, int]) -> Optional[str]:
         """
         Return the point at <point>.
         """
         if self.is_empty():
-            pass
+            return None
         elif self.is_leaf():
             if self._point == point:
                 return self._name
             else:
-                return
+                return None
         else:
             if point[0] <= self._centre[0] and point[1] <= self._centre[1]:
                 # NW
@@ -753,7 +757,7 @@ class QuadTree(Tree):
             elif point[1] > self._centre[1]:  # SE
                 return self._se._find_name(point)
             else:
-                return
+                return None
 
     def names_in_range(self, point: Tuple[int, int], direction: str,
                        distance: int) -> List[str]:
@@ -886,7 +890,7 @@ class QuadTree(Tree):
         else:
             return self._depth_helper(tree)
 
-    def _depth_helper(self, tree: QuadTree):
+    def _depth_helper(self, tree: QuadTree) -> Optional[int]:
         """
         Helper method for depth using the parameter tree.
         """
@@ -894,7 +898,7 @@ class QuadTree(Tree):
             if tree is self:
                 return 0
             else:
-                return
+                return None
         elif tree is self:
             return 0
         elif tree._centre[0] <= self._centre[0]:  # WEST
@@ -940,7 +944,8 @@ class QuadTree(Tree):
         return self._name is None and self.is_leaf()
 
 
-def _calc_point(point, direction, steps) -> Tuple[int, int]:
+def _calc_point(point: Tuple[int, int], direction: str, steps: int) -> \
+        Tuple[int, int]:
     """
     Return the coordinate <steps> away from <point> in <direction>.
     """
@@ -954,8 +959,8 @@ def _calc_point(point, direction, steps) -> Tuple[int, int]:
         return point[0] + steps, point[1]
 
 
-def _find_xy_range(point, direction, distance) -> Tuple[Tuple[int, int],
-                                                        Tuple[int, int]]:
+def _find_xy_range(point: Tuple[int, int], direction: str, distance: int) -> \
+        Tuple[Tuple[int, int], Tuple[int, int]]:
     """
     Return the range within <distance> away from <point> in <direction>.
     """
@@ -1039,7 +1044,7 @@ class TwoDTree(Tree):
         if self._gt is not None:
             self._gt.balance()
 
-    def _remove_root_request(self, request):
+    def _remove_root_request(self, request: str) -> None:
         """
         Helper for balance.
         """
@@ -1180,7 +1185,7 @@ class TwoDTree(Tree):
                 else:
                     self._insert_node_helper(name, point)  # HALF LEAF BASE CASE
 
-    def _insert_node_helper(self, name, point):
+    def _insert_node_helper(self, name: str, point: Tuple[int, int]) -> None:
         """
         Helper method for inserting node at the right subtree attribute with
         parameters name and point
@@ -1236,7 +1241,7 @@ class TwoDTree(Tree):
         elif self._gt is not None and name in self._gt:
             self._gt.remove(name)
 
-    def _remove_root(self):
+    def _remove_root(self) -> None:
         """
         Helper method for removing the root.
         """
@@ -1282,7 +1287,7 @@ class TwoDTree(Tree):
             request_point = min(request_points)
         return nodes[request_points.index(request_point)]
 
-    def _collect_all_nodes_info(self):
+    def _collect_all_nodes_info(self) -> List[tuple]:
         """
         Helper method for remove.
         Return the name and point of all the nodes in the tree.
@@ -1296,7 +1301,7 @@ class TwoDTree(Tree):
         elif self._lt is not None:
             return [(self._name, self._point)] + \
                    self._lt._collect_all_nodes_info()
-        elif self._gt is not None:
+        else:  # gt is not None
             return [(self._name, self._point)] + \
                    self._gt._collect_all_nodes_info()
 
@@ -1397,7 +1402,7 @@ class TwoDTree(Tree):
         False
         """
         if self.is_empty():
-            pass
+            return None
         elif self.is_leaf():
             if self._name == name:
                 new_point = _calc_point(self._point, direction, steps)
@@ -1408,6 +1413,8 @@ class TwoDTree(Tree):
                 else:
                     self._point = new_point
                     return self._point
+            else:
+                return None
         else:
             point = self._find_point(name)  # Proper None ?
             if point is not None:
@@ -1418,19 +1425,20 @@ class TwoDTree(Tree):
                     raise OutOfBoundsError
                 self.remove_point(point)
                 self.insert(name, new_point)
-            return new_point
+                return new_point
+            return None
 
-    def _find_point(self, name):
+    def _find_point(self, name: str) -> Optional[Tuple[int, int]]:
         """
         Helper method for finding the name associated to a point in the tree.
         """
         if self.is_empty():
-            pass
+            return None
         elif self.is_leaf():
             if self._name == name:
                 return self._point
             else:
-                return
+                return None
         else:
             if self._name == name:
                 return self._point
@@ -1439,7 +1447,7 @@ class TwoDTree(Tree):
             elif self._gt is not None and name in self._gt:
                 return self._gt._find_point(name)
             else:
-                return
+                return None
 
     def move_point(self, point: Tuple[int, int], direction: str, steps: int) ->\
             Optional[Tuple[int, int]]:
@@ -1472,7 +1480,7 @@ class TwoDTree(Tree):
         False
         """
         if self.is_empty():
-            pass
+            return None
         elif self.is_leaf():
             if self._point == point:
                 new_point = _calc_point(self._point, direction, steps)
@@ -1483,6 +1491,8 @@ class TwoDTree(Tree):
                 else:
                     self._point = new_point
                     return self._point
+            else:
+                return None
         elif self.contains_point(point):
             new_point = _calc_point(point, direction, steps)
             if not (self._nw[0] <= new_point[0] <= self._se[0] and
@@ -1495,19 +1505,21 @@ class TwoDTree(Tree):
                 self.insert(name, new_point)
                 return new_point
             else:
-                return
+                return None
+        else:
+            return None
 
-    def _find_name(self, point):
+    def _find_name(self, point: Tuple[int, int]) -> Optional[str]:
         """
         Helper method for finding the name corresponding to a point in the tree.
         """
         if self.is_empty():
-            pass
+            return None
         elif self.is_leaf():
             if self._point == point:
                 return self._name
             else:
-                return
+                return None
         elif self._point == point:
             return self._name
         elif (self._split_type == 'x' and point[0] <= self._point[0]) or \
@@ -1653,7 +1665,7 @@ class TwoDTree(Tree):
         else:
             return self._depth_helper(tree)
 
-    def _depth_helper(self, tree: TwoDTree):
+    def _depth_helper(self, tree: TwoDTree) -> Optional[int]:
         """
         Helper method for depth using parameter tree.
         """
@@ -1661,7 +1673,7 @@ class TwoDTree(Tree):
             if tree is self:
                 return 0
             else:
-                return
+                return None
         elif tree is self:
             return 0
         elif (self._split_type == 'x' and tree._point[0] <= self._point[0]) or \
@@ -1725,7 +1737,8 @@ if __name__ == '__main__':
     # q.insert('c', (120, 180))
 
     import python_ta
-    python_ta.check_all(config={'extra-imports': ['typing']})
+    python_ta.check_all(config={'extra-imports': ['typing', 'R0913', 'R0902',
+                                                  'W0611', 'R1710', 'R1702']})
 
     # import doctest
     # doctest.testmod()
