@@ -1,3 +1,18 @@
+"""CSC148 Assignment 2 - Games File
+
+=== CSC148 Summer 2019 ===
+Department of Computer Science,
+University of Toronto
+
+=== Module Description ===
+
+This file contains classes that describe different games.
+
+As discussed in the handout, you may not change any of the public behaviour
+(attributes, methods) given in the starter code, but you can definitely add
+new attributes, functions, classes and methods to complete your work here.
+"""
+
 from __future__ import annotations
 import random
 from typing import Dict, Union, Optional
@@ -50,6 +65,11 @@ class Tag(Game):
 
     def __init__(self, n_players: int, field_type: Union[QuadTree, TwoDTree],
                  duration: int, max_speed: int, max_vision: int) -> None:
+        """Initialize a new game Tag containing n_players, field_type, duration,
+         max_speed and max_vision.
+
+        >>> game = Tag(3, QuadTree((100, 100)), 10, 2, 2)
+        """
 
         player_list = list(range(n_players))
         p = 0
@@ -87,7 +107,19 @@ class Tag(Game):
                 self.field.insert(player_name, location_lst[player])
 
     def handle_collision(self, player1: str, player2: str) -> None:
-        """ Perform some action when <player1> and <player2> collide """
+        """ Perform some action when <player1> and <player2> collide
+
+        >>> game = Tag(3, QuadTree((100, 100)), 10, 2, 2)
+        >>> player = _players.keys()
+        >>> d_lst = 'NSNEWE'
+        >>> d_1 = game._players[player[0]]._direction
+        >>> d_2 = game._players[player[1]]._direction
+        >>> game.handle_collision(player[0], player[1])
+        >>> game._players[player[0]]._direction == d_lst[d_lst.index(d_1) + 1]
+        True
+        >>> game._players[player[1]]._direction == d_lst[d_lst.index(d_2) + 1]
+        True
+        """
         self._players[player1].reverse_direction()
         self._players[player2].reverse_direction()
         if player1 == self._it:
@@ -115,7 +147,13 @@ class Tag(Game):
 
     def check_for_winner(self) -> Optional[str]:
         """ Return the name of the player or group of players that have
-        won the game, or None if no player has won yet """
+        won the game, or None if no player has won yet
+
+        >>> game = Tag(3, QuadTree((100, 100)), 10, 2, 2)
+        >>> player = _players.keys()
+        >>> game.check_for_winner() in [None, player[0], player[1], player[2]]
+        True
+        """
         winner_lst = []
         to_del_lst = []
         for player in self._players:
@@ -171,6 +209,11 @@ class ZombieTag(Game):
 
     def __init__(self, n_players: int, field_type: Union[QuadTree, TwoDTree],
                  duration: int, max_speed: int, max_vision: int) -> None:
+        """Initialize a new game ZombieTag containing n_players, field_type,
+        duration, max_speed and max_vision.
+
+        >>> game = ZombieTag(3, QuadTree((100, 100)), 10, 2, 2)
+        """
 
         player_list = list(range(n_players))
         p = 0
@@ -205,7 +248,19 @@ class ZombieTag(Game):
             self.field.insert(player_name, location_lst[player])
 
     def handle_collision(self, player1: str, player2: str) -> None:
-        """ Perform some action when <player1> and <player2> collide """
+        """ Perform some action when <player1> and <player2> collide
+
+        >>> game = ZombieTag(4, QuadTree((100, 100)), 10, 2, 2)
+        >>> player = _players.keys()
+        >>> d_lst = 'NSNEWE'
+        >>> d_1 = game._players[player[0]]._direction
+        >>> d_2 = game._players[player[1]]._direction
+        >>> game.handle_collision(player[0], player[1])
+        >>> game._players[player[0]]._direction == d_lst[d_lst.index(d_1) + 1]
+        True
+        >>> game._players[player[1]]._direction == d_lst[d_lst.index(d_2) + 1]
+        True
+        """
         if player1 in self._humans and player2 in self._humans:
             self._humans[player1].reverse_direction()
             self._humans[player2].reverse_direction()
@@ -238,7 +293,13 @@ class ZombieTag(Game):
 
     def check_for_winner(self) -> Optional[str]:
         """ Return the name of the player or group of players that have
-        won the game, or None if no player has won yet """
+        won the game, or None if no player has won yet
+
+        >>> game = ZombieTag(4, QuadTree((100, 100)), 10, 2, 2)
+        >>> result = game.check_for_winner()
+        >>> result in ['humans', 'zombies']
+        True
+        """
         if len(self._humans) > 0:
             return 'humans'
         else:
@@ -271,6 +332,11 @@ class EliminationTag(Game):
 
     def __init__(self, n_players: int, field_type: Union[QuadTree, TwoDTree],
                  max_speed: int, max_vision: int) -> None:
+        """Initialize a new game EliminationTag containing n_players,
+        field_type, duration, max_speed and max_vision.
+
+        >>> game = EliminationTag(3, QuadTree((100, 100)), 10, 2, 2)
+        """
 
         player_list = list(range(n_players))
         p = 0
@@ -285,7 +351,8 @@ class EliminationTag(Game):
         self._players = {}
         self.field = field_type
         for p in range(len(player_list)):
-            create_player = Player(str(player_list[p]), random.randint(0, max_vision),
+            create_player = Player(str(player_list[p]),
+                                   random.randint(0, max_vision),
                                    random.randint(1, max_speed), self, 'random',
                                    location_lst[p])
             if p == len(player_list) - 1:
@@ -294,8 +361,8 @@ class EliminationTag(Game):
                 create_player.select_target(str(player_list[p + 1]))
 
             if p == 0:
-                create_player.select_enemy(str(player_list[len(player_list) -
-                                                             1]))
+                create_player.select_enemy(
+                    str(player_list[len(player_list) - 1]))
             else:
                 create_player.select_enemy(str(player_list[p - 1]))
 
@@ -303,7 +370,19 @@ class EliminationTag(Game):
             self.field.insert(str(player_list[p]), location_lst[p])
 
     def handle_collision(self, player1: str, player2: str) -> None:
-        """ Perform some action when <player1> and <player2> collide """
+        """ Perform some action when <player1> and <player2> collide
+
+        >>> game = EliminationTag(4, QuadTree((100, 100)), 10, 2, 2)
+        >>> player = _players.keys()
+        >>> d_lst = 'NSNEWE'
+        >>> d_1 = game._players[player[0]]._direction
+        >>> d_2 = game._players[player[2]]._direction
+        >>> game.handle_collision(player[0], player[2])
+        >>> game._players[player[0]]._direction == d_lst[d_lst.index(d_1) + 1]
+        True
+        >>> game._players[player[2]]._direction == d_lst[d_lst.index(d_2) + 1]
+        True
+        """
         if player1 in self._players[player2].get_targets():
             for targets in self._players[player1].get_targets():
                 self._players[player2].select_target(targets)
@@ -322,7 +401,13 @@ class EliminationTag(Game):
 
     def check_for_winner(self) -> Optional[str]:
         """ Return the name of the player or group of players that have
-        won the game, or None if no player has won yet """
+        won the game, or None if no player has won yet
+
+        >>> game = EliminationTag(4, QuadTree((100, 100)), 10, 2, 2)
+        >>> result = game.check_for_winner()
+        >>> result is None or isinstance(result, list)
+        True
+        """
         max_lst = []
         max_val = 0
         for player in self._players:
@@ -342,5 +427,5 @@ if __name__ == '__main__':
     import python_ta
     python_ta.check_all(config={'extra-imports': ['random', 'typing', 'players',
                                                   'trees'],
-                                'disable': ['R0913']})
-
+                                'disable': ['R0913', 'R0902', 'W0611', 'R1710',
+                                            'R1702']})
