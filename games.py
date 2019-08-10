@@ -163,7 +163,7 @@ class Tag(Game):
                 winner_lst.append(player)
         for loser in to_del_lst:
             self.field.remove(loser)
-            del self._players[loser]
+            self._players.pop(loser)
 
         if len(winner_lst) == 2 and self._it in winner_lst:
             winner_lst.remove(self._it)
@@ -270,7 +270,7 @@ class ZombieTag(Game):
             self._zombies[player2] = self._humans[player2]
             self._zombies[player2].set_speed(1)
             self._humans[player2].ignore_enemy(player1)
-            del self._humans[player2]
+            self._humans.pop(player2)
             self._zombies[player1].ignore_target(player2)
             for target in self._zombies[player1].get_targets():
                 self._zombies[player2].select_target(target)
@@ -282,7 +282,7 @@ class ZombieTag(Game):
             self._zombies[player1] = self._humans[player1]
             self._zombies[player1].set_speed(1)
             self._humans[player1].ignore_enemy(player2)
-            del self._humans[player1]
+            self._humans.pop(player1)
             self._zombies[player2].ignore_target(player1)
             for target in self._zombies[player2].get_targets():
                 self._zombies[player1].select_target(target)
@@ -384,16 +384,20 @@ class EliminationTag(Game):
         True
         """
         if player1 in self._players[player2].get_targets():
-            for targets in self._players[player1].get_targets():
-                self._players[player2].select_target(targets)
             self._players[player2].ignore_target(player1)
-            del self._players[player1]
+            for targets in self._players[player1].get_targets():
+                self._players[targets].ignore_enemy(player1)
+                self._players[targets].select_enemy(player2)
+                self._players[player2].select_target(targets)
+            self._players.pop(player1)
             self._players[player2].increase_points(1)
         elif player2 in self._players[player1].get_targets():
-            for targets in self._players[player2].get_targets():
-                self._players[player1].select_target(targets)
             self._players[player1].ignore_target(player2)
-            del self._players[player2]
+            for targets in self._players[player2].get_targets():
+                self._players[targets].ignore_enemy(player2)
+                self._players[targets].select_enemy(player1)
+                self._players[player1].select_target(targets)
+            self._players.pop(player2)
             self._players[player1].increase_points(1)
         else:
             self._players[player1].reverse_direction()
