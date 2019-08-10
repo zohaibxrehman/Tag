@@ -1,3 +1,18 @@
+"""CSC148 Assignment 2 - Players File
+
+=== CSC148 Summer 2019 ===
+Department of Computer Science,
+University of Toronto
+
+=== Module Description ===
+
+This file contains classes that describe players that play in one of the games.
+
+As discussed in the handout, you may not change any of the public behaviour
+(attributes, methods) given in the starter code, but you can definitely add
+new attributes, functions, classes and methods to complete your work here.
+"""
+
 from __future__ import annotations
 import random
 from typing import List, Tuple, Optional, Set
@@ -37,16 +52,19 @@ class Player:
     _colour: str
     _vision: int
     _speed: int
-    _game: Game
+    _game: 'Game'
     _points: int
     _targets: List[str]
     _enemies: List[str]
     _direction: str
 
-    def __init__(self, name: str, vision: int, speed: int, game: Game,
+    def __init__(self, name: str, vision: int, speed: int, game: 'Game',
                  colour: str, location: Tuple[int, int]) -> None:
         """Initialize a new Player containing name, vision, speed game, colour
-        and location. """
+        and location.
+
+        >>> player = Player('4', 1, 1, 'Game', 'green', (67,89))
+        """
         self._name = name
         self._location = location
         self._colour = colour
@@ -61,8 +79,9 @@ class Player:
     def set_colour(self, colour: str) -> None:
         """ Change the colour of self
 
-        >>> g = Tag(3, QuadTree((100, 100)), 10, 1, 1)
-        >>> player = Player('4', 1, 1, g, 'green', (67,89))
+        >>> player = Player('4', 1, 1, 'Game', 'green', (67,89))
+        >>> player._colour
+        'green'
         >>> player.set_colour('random')
         >>> player._colour
         'random'
@@ -74,8 +93,7 @@ class Player:
     def increase_points(self, points: int) -> None:
         """ Increase <self>'s points by <points>
 
-        >>> g = Tag(3, QuadTree((100, 100)), 10, 1, 1)
-        >>> player = Player('4', 1, 1, g, 'green', (67,89))
+        >>> player = Player('4', 1, 1, 'Game', 'green', (67,89))
         >>> player.increase_points(1)
         >>> player._points
         1
@@ -87,8 +105,7 @@ class Player:
     def get_points(self) -> int:
         """ Return the number of points <self> currently has
 
-        >>> g = Tag(3, QuadTree((100, 100)), 10, 1, 1)
-        >>> player = Player('4', 1, 1, g, 'green', (67,89))
+        >>> player = Player('4', 1, 1, 'Game', 'green', (67,89))
         >>> player.increase_points(1)
         >>> player.get_points()
         1
@@ -98,12 +115,11 @@ class Player:
     def select_target(self, name: str) -> None:
         """ Add a target to <self>'s target list
 
-        >>> g = Tag(3, QuadTree((100, 100)), 10, 1, 1)
-        >>> player1 = Player('4', 1, 1, g, 'green', (67,89))
-        >>> player2 = Player('5', 1, 1, g, 'green', (47,29))
-        >>> player1.select_target(player2)
+        >>> player1 = Player('4', 1, 1, 'Game', 'green', (67,89))
+        >>> player2 = Player('5', 1, 1, 'Game', 'green', (47,29))
+        >>> player1.select_target(player2._name)
         >>> player1._targets
-        ['player2']
+        ['5']
         """
         if name not in self._targets and name not in self._enemies:
             self._targets.append(name)
@@ -111,13 +127,12 @@ class Player:
     def ignore_target(self, name: str) -> None:
         """ Remove a target from <self>'s target list
 
-        >>> g = Tag(3, QuadTree((100, 100)), 10, 1, 1)
-        >>> player1 = Player('4', 1, 1, g, 'green', (67,89))
-        >>> player2 = Player('5', 1, 1, g, 'green', (47,29))
-        >>> player1.select_target(player2)
+        >>> player1 = Player('4', 1, 1, 'Game', 'green', (67,89))
+        >>> player2 = Player('5', 1, 1, 'Game', 'green', (47,29))
+        >>> player1.select_target(player2._name)
         >>> player1._targets
-        ['player2']
-        >>> player1.ignore_target('player2')
+        ['5']
+        >>> player1.ignore_target(player2._name)
         >>> player1._targets
         []
         """
@@ -127,34 +142,72 @@ class Player:
     def get_targets(self) -> List[str]:
         """ Return a copy of the list of target names
 
-        >>> g = Tag(3, QuadTree((100, 100)), 10, 1, 1)
-        >>> player1 = Player('4', 1, 1, g, 'green', (67,89))
-        >>> player2 = Player('5', 1, 1, g, 'green', (47,29))
-        >>> player1.select_target(player2)
+        >>> player1 = Player('4', 1, 1, 'Game', 'green', (67,89))
+        >>> player2 = Player('5', 1, 1, 'Game', 'green', (47,29))
+        >>> player1.select_target(player2._name)
+        >>> player1.get_targets()
+        ['5']
         """
         return self._targets.copy()
 
     def select_enemy(self, name: str) -> None:
-        """ Add an enemy to <self>'s target list """
+        """ Add an enemy to <self>'s target list
+
+        >>> player1 = Player('4', 1, 1, 'Game', 'green', (67,89))
+        >>> player2 = Player('5', 1, 1, 'Game', 'green', (47,29))
+        >>> player1.select_enemy(player2._name)
+        >>> player1._enemies
+        ['5']
+        """
         if name not in self._targets and name not in self._enemies:
             self._enemies.append(name)
 
     def ignore_enemy(self, name: str) -> None:
-        """ Remove an enemy from <self>'s enemy list """
+        """ Remove an enemy from <self>'s enemy list
+
+        >>> player1 = Player('4', 1, 1, 'Game', 'green', (67,89))
+        >>> player2 = Player('5', 1, 1, 'Game', 'green', (47,29))
+        >>> player1.select_enemy(player2._name)
+        >>> player1._enemies
+        ['5']
+        >>> player1.ignore_enemy(player2._name)
+        >>> player1._enemies
+        []
+        """
         if name in self._enemies:
             self._enemies.remove(name)
 
     def get_enemies(self) -> List[str]:
-        """ Return a copy of the list of enemy names """
+        """ Return a copy of the list of enemy names
+
+        >>> player1 = Player('4', 1, 1, 'Game', 'green', (67,89))
+        >>> player2 = Player('5', 1, 1, 'Game', 'green', (47,29))
+        >>> player1.select_enemy(player2._name)
+        >>> player1.get_enemies()
+        ['5']
+        """
         return self._enemies.copy()
 
     def reverse_direction(self) -> None:
         """ Update the direction so that <self> will move in the opposite
-        direction """
+        direction
+
+        >>> player1 = Player('4', 1, 1, 'Game', 'green', (67,89))
+        >>> old_direction = player1._direction
+        >>> player1.reverse_direction()
+        >>> _reverse(old_direction) == player1._direction
+        True
+        """
         self._direction = _reverse(self._direction)
 
     def set_speed(self, speed: int) -> None:
-        """ Update <self>'s speed to <speed> """
+        """ Update <self>'s speed to <speed>
+
+        >>> player1 = Player('4', 1, 1, 'Game', 'green', (67,89))
+        >>> player1.set_speed(2)
+        >>> player1._speed
+        2
+        """
         if speed >= 0:
             self._speed = speed
 
@@ -170,6 +223,18 @@ class Player:
 
         This method should set self._direction to a subset of: ('N', 'S', 'E',
         'W')
+
+        >>> player1 = Player('4', 1, 1, 'Game', 'green', (67,89))
+        >>> player2 = Player('5', 1, 1, 'Game', 'green', (40,29))
+        >>> player3 = Player('6', 1, 1, 'Game', 'green', (63,29))
+        >>> player4 = Player('7', 1, 1, 'Game', 'green', (27,79))
+        >>> player = Player('1', 1, 1, 'Game', 'purple', (50,50))
+        >>> player.select_target(player1._name)
+        >>> player.select_target(player2._name)
+        >>> player.select_target(player3._name)
+        >>> player.select_target(player4._name)
+        >>> player.next_direction() in {'N', 'S', 'W', 'E'}
+        True
         """
         d_lst = ['NW', 'NE', 'SE', 'SW']
         random.shuffle(d_lst)
@@ -210,18 +275,22 @@ class Player:
         If the movement would move self out of bounds, move self in the opposite
         direction instead. self should continue to move in this new direction
         until next_direction is called again.
+
+        >>> player1 = Player('4', 1, 1, 'Game', 'green', (67,89))
+        >>> player1.move()
+        >>> loc_lst = [(68,89), (67, 90), (66, 89), (67, 88), (67,89)]
+        >>> player1._location in loc_lst
+        True
         """
         try:
-            loc = self._game.field.move(self._name, self._direction, self._speed
-                                        )
-            if loc is not None:
-                self._location = loc
+            self._location = self._game.field.move(self._name, self._direction,
+                                                   self._speed)
 
         except OutOfBoundsError:
             self.reverse_direction()
 
 
-def _reverse(direction: str)-> str:
+def _reverse(direction: str)-> Optional[str]:
     """ Return a string of opposite direction to < direction >.
 
     >>> _reverse('N')
@@ -237,10 +306,12 @@ def _reverse(direction: str)-> str:
         return 'W'
     elif direction == 'W':
         return 'E'
+    else:
+        return None
 
 
 if __name__ == '__main__':
     import python_ta
-    python_ta.check_all(config={'extra-imports': ['typing', 'random', 'game',
-                                                  'trees'],
-                                'disable': ['R0913']})
+    python_ta.check_all(
+        config={'extra-imports': ['typing', 'random', 'games', 'trees'],
+                'disable': ['R0913', 'R0902', 'W0611', 'R1710', 'R1702']})
