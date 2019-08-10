@@ -457,7 +457,7 @@ class QuadTree(Tree):
                     self._nw._ne = None
                     self._nw._sw = None
                     self._nw._se = None
-        elif self._ne is not None and name in self._ne:git
+        elif self._ne is not None and name in self._ne:
             self._ne.remove(name)
             if self._ne.is_empty():
                 self._ne = None
