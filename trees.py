@@ -437,7 +437,14 @@ class QuadTree(Tree):
         elif self._se is not None and self._se.is_leaf() and \
                 self._se._name == name:
             self._se = None
-        elif self._nw is not None and name in self._nw:
+        else:
+            self._remove_helper(name)
+
+    def _remove_helper(self, name: str) -> None:
+        """
+        Helper method for remove with parameter name.
+        """
+        if self._nw is not None and name in self._nw:
             # REMOVE FROM NW -> IF NW EMPTY THEN RID OF IT
             #                -> IF ONLY ONE SUBTREE LEFT THEN CLEAN THEN PROMOTE
             #                -> MULTIPLE SUBTREES THEN LEAVE AS IS
@@ -536,7 +543,14 @@ class QuadTree(Tree):
         elif self._se is not None and self._se.is_leaf() and \
                 self._se._point == point:
             self._se = None
-        elif point[0] <= self._centre[0] and point[1] <= self._centre[1]:  # NW
+        else:
+            self._remove_point_helper(point)
+
+    def _remove_point_helper(self, point: Tuple[int, int]) -> None:
+        """
+        Helper method for remove_point with parameter point.
+        """
+        if point[0] <= self._centre[0] and point[1] <= self._centre[1]:  # NW
             self._nw.remove_point(point)
             if self._nw.is_empty():
                 self._nw = None
@@ -1722,7 +1736,7 @@ class TwoDTree(Tree):
 
 
 if __name__ == '__main__':
-    # pass
+    pass
     # t = TwoDTree((0, 0), (200, 200))
     # t.insert('a', (30, 100))
     # t.insert('b', (150, 80))
@@ -1736,9 +1750,9 @@ if __name__ == '__main__':
     # q.insert('b', (150, 150))
     # q.insert('c', (120, 180))
 
-    import python_ta
-    python_ta.check_all(config={'extra-imports': ['typing', 'R0913', 'R0902',
-                                                  'W0611', 'R1710', 'R1702']})
+    # import python_ta
+    # python_ta.check_all(config={'extra-imports': ['typing', 'R0913', 'R0902',
+    #                                               'W0611', 'R1710', 'R1702']})
 
     # import doctest
     # doctest.testmod()
