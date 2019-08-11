@@ -305,9 +305,14 @@ class QuadTree(Tree):
                 self._centre[1]) or self.contains_point(point):
             raise OutOfBoundsError
         else:
-            self._insert_helper(name, point)
+            self._insert_helper(name, point, {'NW': (0, 0),
+                                              'NE': (2 * self._centre[0], 0),
+                                              'SW': (0, 2 * self._centre[1]),
+                                              'SE': (2 * self._centre[0],
+                                                     2 * self._centre[1])})
 
-    def _insert_helper(self, name: str, point: Tuple[int, int]) -> None:
+    def _insert_helper(self, name: str, point: Tuple[int, int],
+                       corners: Dict[str, Tuple[int, int]]) -> None:
         """
         Helper method for insert using the parameters <name> and <point>
         """
@@ -317,7 +322,8 @@ class QuadTree(Tree):
         elif self.is_leaf():
             if self._find_region(self._point) == self._find_region(point):
                 # copying
-                demoted_tree = QuadTree(self._find_centre(self._point))
+                demoted_tree = QuadTree(self._find_centre(self._point, corners))
+                print(self._find_centre(self._point, corners))
                 demoted_tree._name = self._name
                 demoted_tree._point = self._point
 
@@ -326,16 +332,18 @@ class QuadTree(Tree):
                 # emptying
                 self._name = None
                 self._point = None
-                demoted_tree._insert_helper(name, point)  # recursion
+                print(corners)
+                self._corner_helper(self._find_region(point), corners)
+                demoted_tree._insert_helper(name, point, corners)  # recursion
             else:  # REGIONAL BASE CASE
-                demoted_tree = QuadTree(self._find_centre(self._point))
+                demoted_tree = QuadTree(self._find_centre(self._point, corners))
                 demoted_tree._name = self._name
                 demoted_tree._point = self._point
 
                 self._name = None
                 self._point = None
 
-                new_tree = QuadTree(self._find_centre(point))
+                new_tree = QuadTree(self._find_centre(point, corners))
                 new_tree._name = name
                 new_tree._point = point
 
@@ -343,20 +351,50 @@ class QuadTree(Tree):
                 self._insert_region(new_tree)
         elif point[0] <= self._centre[0] and point[1] <= self._centre[1]:  # NW
             if self._nw is None:
-                self._nw = QuadTree(self._find_centre(point))
-            self._nw._insert_helper(name, point)
+                self._nw = QuadTree(self._find_centre(point, corners))
+            self._corner_helper('NW', corners)
+            self._nw._insert_helper(name, point, corners)
         elif point[0] <= self._centre[0]:  # SW
             if self._sw is None:
-                self._sw = QuadTree(self._find_centre(point))
-            self._sw._insert_helper(name, point)
+                self._sw = QuadTree(self._find_centre(point, corners))
+            self._corner_helper('SW', corners)
+            self._sw._insert_helper(name, point, corners)
         elif point[1] <= self._centre[1]:  # NE
             if self._ne is None:
-                self._ne = QuadTree(self._find_centre(point))
-            self._ne._insert_helper(name, point)
+                self._ne = QuadTree(self._find_centre(point, corners))
+            self._corner_helper('NE', corners)
+            self._ne._insert_helper(name, point, corners)
         else:  # SE
             if self._se is None:
-                self._se = QuadTree(self._find_centre(point))
-            self._se._insert_helper(name, point)
+                self._se = QuadTree(self._find_centre(point, corners))
+            self._corner_helper('SE', corners)
+            self._se._insert_helper(name, point, corners)
+
+    def _corner_helper(self, direction: str, corners: Dict):
+        if direction == 'NW':  # NW
+            corners['NE'] = int((corners['NW'][0] + corners['NE'][0]) / 2), int(
+                (corners['NW'][1] + corners['NE'][1]) / 2)
+            corners['SW'] = int((corners['SW'][0] + corners['NW'][0]) / 2), int(
+                (corners['SW'][1] + corners['NW'][1]) / 2)
+            corners['SE'] = self._centre
+        elif direction == 'SW':  # SW
+            corners['NE'] = self._centre
+            corners['NW'] = int((corners['SW'][0] + corners['NW'][0]) / 2), int(
+                (corners['SW'][1] + corners['NW'][1]) / 2)
+            corners['SE'] = int((corners['SW'][0] + corners['SE'][0]) / 2), int(
+                (corners['SW'][1] + corners['SE'][1]) / 2)
+        elif direction == 'NE':  # NE
+            corners['SW'] = self._centre
+            corners['NW'] = int((corners['NE'][0] + corners['NW'][0]) / 2), int(
+                (corners['NE'][1] + corners['NW'][1]) / 2)
+            corners['SE'] = int((corners['SE'][0] + corners['NE'][0]) / 2), int(
+                (corners['SE'][1] + corners['NE'][1]) / 2)
+        else:  # SE
+            corners['NW'] = self._centre
+            corners['NE'] = int((corners['SE'][0] + corners['NE'][0]) / 2), int(
+                (corners['SE'][1] + corners['NE'][1]) / 2)
+            corners['SW'] = int((corners['SW'][0] + corners['SE'][0]) / 2), int(
+                (corners['SE'][1] + corners['SW'][1]) / 2)
 
     def _find_region(self, point: Tuple[int, int]) -> str:
         """
@@ -385,22 +423,23 @@ class QuadTree(Tree):
         else:  # SE
             self._se = tree
 
-    def _find_centre(self, point: Tuple[int, int]) -> Tuple[int, int]:
+    def _find_centre(self, point: Tuple[int, int],
+                     corners: Dict[str, Tuple[int, int]]) -> Tuple[int, int]:
         """
         Return the centre of <point> with respect to self's centre.
         """
         if point[0] <= self._centre[0] and point[1] <= self._centre[1]:  # NW
-            return int(self._centre[0] - self._centre[0] / 2), \
-                   int(self._centre[1] - self._centre[1] / 2)
+            return int((corners['NW'][0] + self._centre[0]) / 2),\
+                   int((corners['NW'][1] + self._centre[1]) / 2)
         elif point[0] <= self._centre[0]:  # SW
-            return int(self._centre[0] - self._centre[0] / 2), \
-                   int(self._centre[1] + self._centre[1] / 2)
+            return int((corners['SW'][0] + self._centre[0]) / 2), \
+                   int((corners['SW'][1] + self._centre[1]) / 2)
         elif point[1] <= self._centre[1]:  # NE
-            return int(self._centre[0] + self._centre[0] / 2), \
-                   int(self._centre[1] - self._centre[1] / 2)
+            return int((corners['NE'][0] + self._centre[0]) / 2), \
+                   int((corners['NE'][1] + self._centre[1]) / 2)
         else:  # SE
-            return int(self._centre[0] + self._centre[0] / 2), \
-                   int(self._centre[1] + self._centre[1] / 2)
+            return int((corners['SE'][0] + self._centre[0]) / 2), \
+                   int((corners['SE'][1] + self._centre[1]) / 2)
 
     def remove(self, name: str) -> None:
         """Remove information about a player named <name> from this tree.
@@ -1737,16 +1776,25 @@ class TwoDTree(Tree):
 
 if __name__ == '__main__':
     pass
-    # t = TwoDTree((0, 0), (200, 200))
+    # t = TwoDTree((0, 0), (100, 100))
     # t.insert('a', (30, 100))
+    # t.insert('b', (50, 50))
+    # t.insert('c', (51, 50))
     # t.insert('b', (150, 80))
     # t.insert('c', (150, 20))
     # t.insert('d', (20, 20))
     # t.insert('e', (140, 100))
     #
-    # q = QuadTree((100, 100))
-    # q.insert('a', (50, 50))
-    # q.insert('d', (120, 80))
+    # import random
+    # q = QuadTree((250, 250))
+    # poly = [(274, 299), (468, 500), (323, 198), (397, 92), (169, 292), (124, 394), (463, 500), (366, 14), (325, 91), (99, 465)]
+    # for loc in poly:
+    #     print(loc)
+    #     q.insert(str(random.randint(0, 1000000)), loc)
+    # q.insert('a', (468, 500))
+    # q.insert('d',  (463, 500))
+    # q.insert('b', (250, 180))
+    # q.insert('c', (250, 181))
     # q.insert('b', (150, 150))
     # q.insert('c', (120, 180))
 
