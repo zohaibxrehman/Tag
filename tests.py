@@ -4,6 +4,7 @@ import trees
 import players
 import games
 
+
 ##### TREES #####
 
 class TreesTest:
@@ -93,9 +94,12 @@ class TreesTest:
     def test_names_in_range(self):
         self.tree.insert('jon', (250, 250))
         self.tree.insert('joe', (300, 300))
-        assert set(self.tree.names_in_range((200, 200), 'SE', 150)) == {'jon', 'joe'}
-        assert set(self.tree.names_in_range((350, 350), 'NW', 150)) == {'jon', 'joe'}
-        assert set(self.tree.names_in_range((0, 500), 'NE', 1000)) == {'jon', 'joe'}
+        assert set(self.tree.names_in_range((200, 200), 'SE', 150)) == {'jon',
+                                                                        'joe'}
+        assert set(self.tree.names_in_range((350, 350), 'NW', 150)) == {'jon',
+                                                                        'joe'}
+        assert set(self.tree.names_in_range((0, 500), 'NE', 1000)) == {'jon',
+                                                                       'joe'}
         assert set(self.tree.names_in_range((200, 200), 'SE', 90)) == {'jon'}
         assert set(self.tree.names_in_range((350, 350), 'NW', 90)) == {'joe'}
         assert len(self.tree.names_in_range((350, 350), 'NW', 10)) == 0
@@ -111,6 +115,7 @@ class TreesTest:
         assert self.tree.is_leaf()
         self.tree.insert('joe', (300, 300))
         assert not self.tree.is_leaf()
+
 
 class TestQuadTree(TreesTest):
     def setup_method(self):
@@ -136,6 +141,7 @@ class TestQuadTree(TreesTest):
         assert self.tree.depth(joe) == 1
         assert jon.depth(job) is None
         assert self.tree.depth(self.tree) is None
+
 
 class Test2DTree(TreesTest):
     def setup_method(self):
@@ -163,6 +169,7 @@ class Test2DTree(TreesTest):
         assert joe.depth(minnie) is None
         assert jon.depth(minnie) == 2
         assert job.depth(minnie) == 1
+
 
 ##### PLAYERS #####
 
@@ -253,7 +260,8 @@ class PlayersTest:
     def _move_into_starting_position(self,
                                      coords: List[Tuple[int, int]],
                                      targets: List[int],
-                                     enemies: List[int]) -> Tuple[players.Player, List[players.Player]]:
+                                     enemies: List[int]) -> Tuple[
+        players.Player, List[players.Player]]:
         player, *others = self.game._players.values()
         self._reset_player(player, (250, 250))
         for i, (coord, other) in enumerate(zip(coords, others)):
@@ -272,30 +280,6 @@ class PlayersTest:
         assert player.next_direction() == set('NSEW')
         assert player._direction in set('NSEW')
 
-    def test_next_direction_no_best2(self):
-        coords = [(200,200), (300, 300), (200, 300), (300, 200)]
-        targets = [0, 1, 2, 3]
-        enemies = []
-        player, _ = self._move_into_starting_position(coords, targets, enemies)
-        assert player.next_direction() == set('NSEW')
-        assert player._direction in set('NSEW')
-
-    def test_next_direction_towards_targets(self):
-        coords = [(200,200), (300, 300), (200, 300), (300, 200)]
-        targets = [0]
-        enemies = [1, 2, 3]
-        player, _ = self._move_into_starting_position(coords, targets, enemies)
-        assert player.next_direction() == set('NW')
-        assert player._direction in set('NW')
-
-    def test_next_direction_away_from_enemy(self):
-        coords = [(200,200), (300, 300), (200, 300), (300, 200)]
-        targets = [1, 2, 3]
-        enemies = [0]
-        player, _ = self._move_into_starting_position(coords, targets, enemies)
-        assert player.next_direction() == set('SE')
-        assert player._direction in set('SE')
-
     def test_move_no_collision(self):
         coords = [(50, 50), (50, 450), (450, 450), (450, 50)]
         targets = []
@@ -310,7 +294,8 @@ class PlayersTest:
         coords = [(260, 250), (50, 450), (450, 450), (450, 50)]
         targets = []
         enemies = []
-        player, others = self._move_into_starting_position(coords, targets, enemies)
+        player, others = self._move_into_starting_position(coords, targets,
+                                                           enemies)
         player._speed = 10
         player._direction = 'E'
         player.move()
@@ -328,13 +313,16 @@ class PlayersTest:
         assert player._location == (250, 250)
         assert player._direction == 'W'
 
+
 class TestPlayersQuadTree(PlayersTest):
     def setup_method(self):
         self.game = games.Tag(5, trees.QuadTree((250, 250)), 5, 3, 4)
 
+
 class TestPlayers2DTree(PlayersTest):
     def setup_method(self):
         self.game = games.Tag(5, trees.TwoDTree((0, 0), (500, 500)), 5, 3, 4)
+
 
 ##### GAMES #####
 
@@ -378,13 +366,16 @@ class TagTests:
         winner = next(p for p in game._players if p != game._it)
         assert game.check_for_winner() == winner
 
+
 class TestTagQuadTree(TagTests):
     def setup_method(self):
         self.tree = trees.QuadTree((250, 250))
 
+
 class TestTag2dTree(TagTests):
     def setup_method(self):
         self.tree = trees.TwoDTree((0, 0), (500, 500))
+
 
 ### ZOMBIE TAG ###
 
@@ -395,7 +386,8 @@ class ZombieTagTests:
         assert all(name in game.field for name in game._zombies)
         assert all(name in game.field for name in game._humans)
         assert len(game._zombies.keys() & game._humans.keys()) == 0
-        assert all(player._colour == 'green' for _, player in game._humans.items())
+        assert all(
+            player._colour == 'green' for _, player in game._humans.items())
         assert len(game._zombies) == 1
         assert game._zombies.popitem()[1]._colour == 'purple'
 
@@ -427,13 +419,16 @@ class ZombieTagTests:
         game.handle_collision(human._name, zombie._name)
         assert game.check_for_winner() == 'zombies'
 
+
 class TestZombieTagQuadTree(ZombieTagTests):
     def setup_method(self):
         self.tree = trees.QuadTree((250, 250))
 
+
 class TestZombieTag2dTree(ZombieTagTests):
     def setup_method(self):
         self.tree = trees.TwoDTree((0, 0), (500, 500))
+
 
 ### ELIMINATION TAG ###
 
@@ -442,7 +437,8 @@ class EliminationTagTests:
         game = games.EliminationTag(10, self.tree, 3, 4)
         assert len(game._players) == 10
         assert all(name in game.field for name in game._players)
-        assert all(player._colour == 'random' for _, player in game._players.items())
+        assert all(
+            player._colour == 'random' for _, player in game._players.items())
         player = list(game._players.values())[0]
         players = set()
         while player not in players:
@@ -454,7 +450,8 @@ class EliminationTagTests:
     def test_handle_collision_do_not_eliminate(self):
         game = games.EliminationTag(10, self.tree, 3, 4)
         player1 = list(game._players)[0]
-        player2 = next(name for name, p in game._players.items() if player1 not in p.get_targets())
+        player2 = next(name for name, p in game._players.items() if
+                       player1 not in p.get_targets())
         dir1 = game._players[player1]._direction
         dir2 = game._players[player2]._direction
         game.handle_collision(player1, player2)
@@ -483,13 +480,16 @@ class EliminationTagTests:
         game._players[player1].increase_points(1)
         assert game.check_for_winner() == player1
 
+
 class TestEliminationTagQuadTree(EliminationTagTests):
     def setup_method(self):
         self.tree = trees.QuadTree((250, 250))
 
+
 class TestEliminationTag2dTree(EliminationTagTests):
     def setup_method(self):
         self.tree = trees.TwoDTree((0, 0), (500, 500))
+
 
 if __name__ == '__main__':
     pytest.main('tests.py')
