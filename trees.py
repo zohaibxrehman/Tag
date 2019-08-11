@@ -316,6 +316,7 @@ class QuadTree(Tree):
         """
         Helper method for insert using the parameters <name> and <point>
         """
+        # print(name)
         if self.is_empty():
             self._name = name
             self._point = point
@@ -323,7 +324,7 @@ class QuadTree(Tree):
             if self._find_region(self._point) == self._find_region(point):
                 # copying
                 demoted_tree = QuadTree(self._find_centre(self._point, corners))
-                print(self._find_centre(self._point, corners))
+                # print(self._find_centre(self._point, corners))
                 demoted_tree._name = self._name
                 demoted_tree._point = self._point
 
@@ -332,7 +333,7 @@ class QuadTree(Tree):
                 # emptying
                 self._name = None
                 self._point = None
-                print(corners)
+                # print(corners)
                 self._corner_helper(self._find_region(point), corners)
                 demoted_tree._insert_helper(name, point, corners)  # recursion
             else:  # REGIONAL BASE CASE
@@ -369,6 +370,7 @@ class QuadTree(Tree):
                 self._se = QuadTree(self._find_centre(point, corners))
             self._corner_helper('SE', corners)
             self._se._insert_helper(name, point, corners)
+        # print(name in self)
 
     def _corner_helper(self, direction: str, corners: Dict):
         if direction == 'NW':  # NW
@@ -467,18 +469,42 @@ class QuadTree(Tree):
         elif self._nw is not None and self._nw.is_leaf() and \
                 self._nw._name == name:
             self._nw = None
+            self._remove_promoter()
         elif self._ne is not None and self._ne.is_leaf() and \
                 self._ne._name == name:
             self._ne = None
+            self._remove_promoter()
         elif self._sw is not None and self._sw.is_leaf() and \
                 self._sw._name == name:
             self._sw = None
+            self._remove_promoter()
         elif self._se is not None and self._se.is_leaf() and \
                 self._se._name == name:
             self._se = None
+            self._remove_promoter()
         else:
             self._remove_helper(name)
+            if self.is_empty():
+                pass
+            else:
+                self._remove_promoter()
 
+        # if self.is_empty():
+        #     pass
+        # else:
+        #     subtrees = [self._nw, self._ne, self._sw, self._se]
+        #     while None in subtrees:
+        #         subtrees.remove(None)
+        #     # PROMOTION
+        #     if len(subtrees) == 1:
+        #         self._name = subtrees[0]._name
+        #         self._point = subtrees[0]._point
+        #         # PUSHING IT UP
+        #         # DELETING FOR PROMOTION
+        #         self._nw = None
+        #         self._ne = None
+        #         self._sw = None
+        #         self._se = None
     def _remove_helper(self, name: str) -> None:
         """
         Helper method for remove with parameter name.
@@ -491,63 +517,42 @@ class QuadTree(Tree):
             if self._nw.is_empty():
                 self._nw = None
             else:
-                subtrees = [self._nw._nw, self._nw._ne, self._nw._sw,
-                            self._nw._se]
-                while None in subtrees:
-                    subtrees.remove(None)
-                # PROMOTION
-                if len(subtrees) == 1:
-                    self._nw = subtrees[0]  # PUSHING IT UP
-                    # DELETING FOR PROMOTION
-                    self._nw._nw = None
-                    self._nw._ne = None
-                    self._nw._sw = None
-                    self._nw._se = None
+                self._nw._remove_promoter()
         elif self._ne is not None and name in self._ne:
             self._ne.remove(name)
             if self._ne.is_empty():
                 self._ne = None
             else:
-                subtrees = [self._ne._nw, self._ne._ne, self._ne._sw,
-                            self._ne._se]
-                while None in subtrees:
-                    subtrees.remove(None)
-                if len(subtrees) == 1:
-                    self._ne = subtrees[0]
-                    self._ne._nw = None
-                    self._ne._ne = None
-                    self._ne._sw = None
-                    self._ne._se = None
+                self._ne._remove_promoter()
         elif self._sw is not None and name in self._sw:
             self._sw.remove(name)
             if self._sw.is_empty():
                 self._sw = None
             else:
-                subtrees = [self._sw._nw, self._sw._ne, self._sw._sw,
-                            self._sw._se]
-                while None in subtrees:
-                    subtrees.remove(None)
-                if len(subtrees) == 1:
-                    self._nw = subtrees[0]
-                    self._sw._nw = None
-                    self._sw._ne = None
-                    self._sw._sw = None
-                    self._sw._se = None
+                self._sw._remove_promoter()
         elif self._se is not None and name in self._se:
             self._se.remove(name)
             if self._se.is_empty():
                 self._se = None
             else:
-                subtrees = [self._se._nw, self._se._ne, self._se._sw,
-                            self._se._se]
-                while None in subtrees:
-                    subtrees.remove(None)
-                if len(subtrees) == 1:
-                    self._se = subtrees[0]
-                    self._se._nw = None
-                    self._se._ne = None
-                    self._se._sw = None
-                    self._se._se = None
+                self._se._remove_promoter()
+
+    def _remove_promoter(self):
+        """
+        Helper method for promoting when removing from a tree with single
+        subtree.
+        """
+        subtrees = [self._nw, self._ne, self._sw, self._se]
+        while None in subtrees:
+            subtrees.remove(None)
+        # PROMOTION
+        if len(subtrees) == 1:
+            self._name = subtrees[0]._name
+            self._point = subtrees[0]._point
+            self._nw = None
+            self._ne = None
+            self._sw = None
+            self._se = None
 
     def remove_point(self, point: Tuple[int, int]) -> None:
         """ Remove information about a player at point <point> from this tree.
@@ -573,17 +578,25 @@ class QuadTree(Tree):
         elif self._nw is not None and self._nw.is_leaf() and \
                 self._nw._point == point:
             self._nw = None
+            self._remove_promoter()
         elif self._ne is not None and self._ne.is_leaf() and \
                 self._ne._point == point:
             self._ne = None
+            self._remove_promoter()
         elif self._sw is not None and self._sw.is_leaf() and \
                 self._sw._point == point:
             self._sw = None
+            self._remove_promoter()
         elif self._se is not None and self._se.is_leaf() and \
                 self._se._point == point:
             self._se = None
+            self._remove_promoter()
         else:
             self._remove_point_helper(point)
+            if self.is_empty():
+                pass
+            else:
+                self._remove_promoter()
 
     def _remove_point_helper(self, point: Tuple[int, int]) -> None:
         """
@@ -594,63 +607,25 @@ class QuadTree(Tree):
             if self._nw.is_empty():
                 self._nw = None
             else:
-                subtrees = [self._nw._nw, self._nw._ne, self._nw._sw,
-                            self._nw._se]
-                while None in subtrees:
-                    subtrees.remove(None)
-                # PROMOTION
-                if len(subtrees) == 1:
-                    self._nw = subtrees[0]  # PUSHING IT UP
-                    # DELETING FOR PROMOTION
-                    self._nw._nw = None
-                    self._nw._ne = None
-                    self._nw._sw = None
-                    self._nw._se = None
+                self._nw._remove_promoter()
         elif point[0] <= self._centre[0]:  # SW
             self._sw.remove_point(point)
             if self._sw.is_empty():
                 self._sw = None
             else:
-                subtrees = [self._sw._nw, self._sw._ne, self._sw._sw,
-                            self._sw._se]
-                while None in subtrees:
-                    subtrees.remove(None)
-                if len(subtrees) == 1:
-                    self._nw = subtrees[0]
-                    self._sw._nw = None
-                    self._sw._ne = None
-                    self._sw._sw = None
-                    self._sw._se = None
+                self._sw._remove_promoter()
         elif point[1] <= self._centre[1]:  # NE
             self._ne.remove_point(point)
             if self._ne.is_empty():
                 self._ne = None
             else:
-                subtrees = [self._ne._nw, self._ne._ne, self._ne._sw,
-                            self._ne._se]
-                while None in subtrees:
-                    subtrees.remove(None)
-                if len(subtrees) == 1:
-                    self._ne = subtrees[0]
-                    self._ne._nw = None
-                    self._ne._ne = None
-                    self._ne._sw = None
-                    self._ne._se = None
+                self._ne._remove_promoter()
         elif point[1] > self._centre[1]:  # SE
             self._se.remove_point(point)
             if self._se.is_empty():
                 self._se = None
             else:
-                subtrees = [self._se._nw, self._se._ne, self._se._sw,
-                            self._se._se]
-                while None in subtrees:
-                    subtrees.remove(None)
-                if len(subtrees) == 1:
-                    self._se = subtrees[0]
-                    self._se._nw = None
-                    self._se._ne = None
-                    self._se._sw = None
-                    self._se._se = None
+                self._se._remove_promoter()
 
     def move(self, name: str, direction: str, steps: int) -> \
             Optional[Tuple[int, int]]:
