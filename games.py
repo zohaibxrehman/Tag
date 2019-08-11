@@ -77,8 +77,7 @@ class Tag(Game):
         while p < n_players:
             loc = (random.randint(0, 500), random.randint(0, 500))
             if loc not in location_lst:
-                location_lst.append((random.randint(0, 500),
-                                     random.randint(0, 500)))
+                location_lst.append(loc)
                 p += 1
 
         self._players = {}
@@ -87,14 +86,13 @@ class Tag(Game):
         self._duration = duration
         create_it = Player(self._it, random.randint(0, max_vision),
                            random.randint(1, max_speed), self, 'purple',
-                           location_lst[player_list.index(int(self._it))])
+                           location_lst[int(self._it)])
         self._players[self._it] = create_it
-        self.field.insert(self._it, location_lst[player_list.index(int(self._it)
-                                                                   )])
+        self.field.insert(self._it, location_lst[int(self._it)])
 
         for player in range(len(player_list)):
             player_name = str(player_list[player])
-            if str(player) != self._it:
+            if player_name != self._it:
                 create_player = Player(player_name,
                                        random.randint(0, max_vision),
                                        random.randint(1, max_speed), self,
@@ -110,7 +108,7 @@ class Tag(Game):
         """ Perform some action when <player1> and <player2> collide
 
         >>> game = Tag(3, QuadTree((100, 100)), 10, 2, 2)
-        >>> player = _players.keys()
+        >>> player = game._players.keys()
         >>> d_lst = 'NSNEWE'
         >>> d_1 = game._players[player[0]]._direction
         >>> d_2 = game._players[player[1]]._direction
@@ -150,7 +148,7 @@ class Tag(Game):
         won the game, or None if no player has won yet
 
         >>> game = Tag(3, QuadTree((100, 100)), 10, 2, 2)
-        >>> player = _players.keys()
+        >>> player = game._players.keys()
         >>> game.check_for_winner() in [None, player[0], player[1], player[2]]
         True
         """
@@ -221,8 +219,7 @@ class ZombieTag(Game):
         while p <= n_players:
             loc = (random.randint(0, 500), random.randint(0, 500))
             if loc not in location_lst:
-                location_lst.append((random.randint(0, 500),
-                                     random.randint(0, 500)))
+                location_lst.append(loc)
                 p += 1
 
         self._humans = {}
@@ -251,7 +248,7 @@ class ZombieTag(Game):
         """ Perform some action when <player1> and <player2> collide
 
         >>> game = ZombieTag(4, QuadTree((100, 100)), 10, 2, 2)
-        >>> player = _players.keys()
+        >>> player = game._players.keys()
         >>> d_lst = 'NSNEWE'
         >>> d_1 = game._players[player[0]]._direction
         >>> d_2 = game._players[player[1]]._direction
@@ -344,8 +341,7 @@ class EliminationTag(Game):
         while p < n_players:
             loc = (random.randint(0, 500), random.randint(0, 500))
             if loc not in location_lst:
-                location_lst.append((random.randint(0, 500),
-                                     random.randint(0, 500)))
+                location_lst.append(loc)
                 p += 1
 
         self._players = {}
