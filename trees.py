@@ -269,7 +269,8 @@ class QuadTree(Tree):
         elif self.is_leaf():
             return self._point == point
         else:
-            if point[0] <= self._centre[0] and point[1] <= self._centre[1]: # NW
+            if point[0] <= self._centre[0] and point[1] <= self._centre[1]:
+                # NW
                 return self._nw.contains_point(point) \
                     if self._nw is not None else False
             elif point[0] <= self._centre[0]:  # SW
@@ -523,7 +524,7 @@ class QuadTree(Tree):
         subtrees = [self._nw, self._ne, self._sw, self._se]
         while None in subtrees:
             subtrees.remove(None)
-        if len(subtrees) == 1:
+        if len(subtrees) == 1 and subtrees[0].is_leaf():
             self._name = subtrees[0]._name
             self._point = subtrees[0]._point
             self._nw = None
@@ -1025,8 +1026,8 @@ class TwoDTree(Tree):
     _gt: Optional[TwoDTree]
     _split_type: str
 
-    def __init__(self, nw: Optional[Tuple[int, int]] = None,
-                 se: Optional[Tuple[int, int]] = None) -> None:
+    def __init__(self, nw: Optional[Tuple[int, int]],
+                 se: Optional[Tuple[int, int]]) -> None:
         """Initialize a new Tree instance with <nw> and <se>.
 
         Runtime: O(1)
@@ -1194,12 +1195,12 @@ class TwoDTree(Tree):
         """
         if (self._split_type == 'x' and point[0] <= self._point[0]) or\
                 (self._split_type == 'y' and point[1] <= self._point[1]):  # LX
-            self._lt = TwoDTree()
+            self._lt = TwoDTree(None, None)
             self._lt._name = name
             self._lt._point = point
             self._lt._split_type = 'y' if self._split_type == 'x' else 'x'
         else:  # LD
-            self._gt = TwoDTree()
+            self._gt = TwoDTree(None, None)
             self._gt._name = name
             self._gt._point = point
             self._gt._split_type = 'y' if self._split_type == 'x' else 'x'
@@ -1691,5 +1692,3 @@ if __name__ == '__main__':
     python_ta.check_all(config={'extra-imports': ['typing'],
                                 'disable': ['R0913', 'R0902', 'W0611', 'R1710',
                                             'R1702']})
-    # import doctest
-    # doctest.testmod()
