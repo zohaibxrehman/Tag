@@ -6,11 +6,7 @@ University of Toronto
 
 === Module Description ===
 
-This file contains classes that describe different games.
-
-As discussed in the handout, you may not change any of the public behaviour
-(attributes, methods) given in the starter code, but you can definitely add
-new attributes, functions, classes and methods to complete your work here.
+This file contains classes that describe different versions of tag games.
 """
 
 from __future__ import annotations

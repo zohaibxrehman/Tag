@@ -7,10 +7,6 @@ University of Toronto
 === Module Description ===
 
 This file contains classes that describe players that play in one of the games.
-
-As discussed in the handout, you may not change any of the public behaviour
-(attributes, methods) given in the starter code, but you can definitely add
-new attributes, functions, classes and methods to complete your work here.
 """
 
 from __future__ import annotations
@@ -283,8 +279,10 @@ class Player:
         True
         """
         try:
-            self._location = self._game.field.move(self._name, self._direction,
-                                                   self._speed)
+            loc = self._game.field.move(self._name, self._direction,
+                                        self._speed)
+            if loc is not None:
+                self._location = loc
 
         except OutOfBoundsError:
             self.reverse_direction()
