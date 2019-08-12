@@ -3,9 +3,9 @@
 Department of Computer Science,
 University of Toronto
 === Module Description ===
-This file contains the Tree abstract class and two concrete implementations of
-this abstract class. The two implementations are QuadTree and TwoDTree which is
-a kd-tree of dimension 2.
+This <trees.py> file contains the Tree abstract class and two concrete
+implementations of this abstract class. The two implementations are QuadTree and
+TwoDTree which is a kd-tree of dimension 2.
 """
 
 from __future__ import annotations
@@ -179,9 +179,9 @@ class QuadTree(Tree):
     _name: name of the tree
     _point: point of the tree
     _ne: the north-east subtree of the tree
-    _nw: the north-east subtree of the tree
-    _se: the north-east subtree of the tree
-    _sw: the north-east subtree of the tree
+    _nw: the north-west subtree of the tree
+    _se: the south-east subtree of the tree
+    _sw: the south-west subtree of the tree
 
     === Representation Invariant ===
     - only leaf nodes can have a non-None _name attribute
@@ -316,7 +316,6 @@ class QuadTree(Tree):
         """
         Helper method for insert using the parameters <name> and <point>
         """
-        # print(name)
         if self.is_empty():
             self._name = name
             self._point = point
@@ -324,7 +323,6 @@ class QuadTree(Tree):
             if self._find_region(self._point) == self._find_region(point):
                 # copying
                 demoted_tree = QuadTree(self._find_centre(self._point, corners))
-                # print(self._find_centre(self._point, corners))
                 demoted_tree._name = self._name
                 demoted_tree._point = self._point
 
@@ -333,7 +331,6 @@ class QuadTree(Tree):
                 # emptying
                 self._name = None
                 self._point = None
-                # print(corners)
                 self._corner_helper(self._find_region(point), corners)
                 demoted_tree._insert_helper(name, point, corners)  # recursion
             else:  # REGIONAL BASE CASE
@@ -370,9 +367,9 @@ class QuadTree(Tree):
                 self._se = QuadTree(self._find_centre(point, corners))
             self._corner_helper('SE', corners)
             self._se._insert_helper(name, point, corners)
-        # print(name in self)
 
-    def _corner_helper(self, direction: str, corners: Dict):
+    def _corner_helper(self, direction: str,
+                       corners: Dict[str, Tuple[int, int]]) -> None:
         if direction == 'NW':  # NW
             corners['NE'] = int((corners['NW'][0] + corners['NE'][0]) / 2), int(
                 (corners['NW'][1] + corners['NE'][1]) / 2)
@@ -489,30 +486,11 @@ class QuadTree(Tree):
             else:
                 self._remove_promoter()
 
-        # if self.is_empty():
-        #     pass
-        # else:
-        #     subtrees = [self._nw, self._ne, self._sw, self._se]
-        #     while None in subtrees:
-        #         subtrees.remove(None)
-        #     # PROMOTION
-        #     if len(subtrees) == 1:
-        #         self._name = subtrees[0]._name
-        #         self._point = subtrees[0]._point
-        #         # PUSHING IT UP
-        #         # DELETING FOR PROMOTION
-        #         self._nw = None
-        #         self._ne = None
-        #         self._sw = None
-        #         self._se = None
     def _remove_helper(self, name: str) -> None:
         """
         Helper method for remove with parameter name.
         """
         if self._nw is not None and name in self._nw:
-            # REMOVE FROM NW -> IF NW EMPTY THEN RID OF IT
-            #                -> IF ONLY ONE SUBTREE LEFT THEN CLEAN THEN PROMOTE
-            #                -> MULTIPLE SUBTREES THEN LEAVE AS IS
             self._nw.remove(name)
             if self._nw.is_empty():
                 self._nw = None
@@ -537,7 +515,7 @@ class QuadTree(Tree):
             else:
                 self._se._remove_promoter()
 
-    def _remove_promoter(self):
+    def _remove_promoter(self) -> None:
         """
         Helper method for promoting when removing from a tree with single
         subtree.
@@ -545,7 +523,6 @@ class QuadTree(Tree):
         subtrees = [self._nw, self._ne, self._sw, self._se]
         while None in subtrees:
             subtrees.remove(None)
-        # PROMOTION
         if len(subtrees) == 1:
             self._name = subtrees[0]._name
             self._point = subtrees[0]._point
@@ -668,7 +645,7 @@ class QuadTree(Tree):
                     return self._point
             return None
         else:
-            point = self._find_point(name)  # Proper None ?
+            point = self._find_point(name)
             if point is not None:
                 new_point = _calc_point(point, direction, steps)
                 if not (new_point[0] <= 2 * self._centre[0] and
@@ -777,7 +754,7 @@ class QuadTree(Tree):
         else:
             if point[0] <= self._centre[0] and point[1] <= self._centre[1]:
                 # NW
-                return self._nw._find_name(point) # IF NONE ? NOT POSSIBLE ?
+                return self._nw._find_name(point)
             elif point[0] <= self._centre[0]:  # SW
                 return self._sw._find_name(point)
             elif point[1] <= self._centre[1]:  # NE
@@ -908,7 +885,6 @@ class QuadTree(Tree):
         1
         >>> q.depth(q)
         """
-        #  ask about repetitive recursion. more runtime but same bound.
         if not isinstance(tree, QuadTree):
             return None
         elif self.is_empty() or self.is_leaf():
@@ -961,7 +937,6 @@ class QuadTree(Tree):
                 and self._nw is None
                 and self._se is None
                 and self._sw is None)
-        #  use all. remove is none.
 
     def is_empty(self) -> bool:
         """ Return True if <self> does not store any information about the
@@ -1008,17 +983,40 @@ class TwoDTree(Tree):
     A TwoDTree. Concrete implementation of Tree.
 
     === Private Attributes ===
-    _centre: centre of the tree
     _name: name of the tree
     _point: point of the tree
-    _ne: the north-east subtree of the tree
-    _nw: the north-east subtree of the tree
-    _se: the north-east subtree of the tree
-    _sw: the north-east subtree of the tree
+    _nw: the x/y coordinates of the north west corner of the rectangle
+    described by this tree
+    _se: the x/y coordinates of the south east corner of the rectangle described
+     by this tree
+    _lt: a 2D-tree that represents the either the north-most or west-most
+    section of the rectangle
+    _gt: a 2D-tree that represents the either the south-most or east-most
+    section of the rectangle
+    _split_type: a string indicating whether this rectangle should be split
+    vertically or horizontally
 
-
+    === Representation Invariants ===
+    - all nodes must have _name and _point attributes unless they have no
+    descendants and no parents.
+    - a node with no parents must have a _split_type == 'x'
+    - a non-root node should have a value of None for both its _nw and _se
+    attributes.
+    - a root node should not have a value of None for its _nw and _se
+    attributes.
+    - a node with _split_type == 'x' must not have a parent or any children with
+     _split_type == 'x'
+    - a node with _split_type == 'y' must not have a parent or any children with
+     _split_type == 'y'
+    - all descendants of a given node p must have a _point that falls in the
+    rectangle described by _nw and _se
+    - for a given node p, if _split_type == 'x' then:
+    - all descendants d of p must be in p._lt if d._point[0] <= p._point[0] and
+    be in p._gt otherwise
+    - for a given node p, if _split_type == 'y' then:
+    - all descendants d of p must be in p._lt if d._point[1] <= p._point[1] and
+    be in p._gt otherwise
     """
-
     _name: Optional[str]
     _point: Optional[Tuple[int, int]]
     _nw: Optional[Tuple[int, int]]
@@ -1048,6 +1046,9 @@ class TwoDTree(Tree):
         """ Balance <self> so that there is at most a difference of 1 between
         the size of the _lt subtree and the size of the _gt subtree for all
         trees in <self>.
+
+        === Precondition ===
+        It is possible to balance this tree
 
         >>> t = TwoDTree((0, 0), (100, 100))
         >>> t.balance()
@@ -1086,33 +1087,6 @@ class TwoDTree(Tree):
             self.remove_point(replacement_info[1])
             self._name = replacement_info[0]
             self._point = replacement_info[1]
-
-    # def _fix_values(self):
-    #     if self.is_empty():
-    #         pass
-    #     elif self.is_leaf():
-    #         pass
-    #     else:
-    #         if self._lt is not None:
-    #             if self._split_type == 'x':  # LX
-    #                 self._lt._split_type = 'y'
-    #                 self._lt._nw = self._nw
-    #                 self._lt._se = self._point[0], self._se[1]
-    #             else:  # LU
-    #                 self._split_type = 'x'
-    #                 self._lt._nw = self._nw
-    #                 self._lt._se = self._se[0], self._point[1]
-    #             self._lt._fix_values()
-    #         if self._gt is not None:
-    #             if self._split_type == 'x':  # RX
-    #                 self._lt._split_type = 'y'
-    #                 self._lt._nw = self._point[0], self._nw[1]
-    #                 self._lt._se = self._se
-    #             else:  # LD
-    #                 self._split_type = 'x'
-    #                 self._lt._nw = self._nw[0], self._point[1]
-    #                 self._lt._se = self._se
-    #             self._gt._fix_values()
 
     def __contains__(self, name: str) -> bool:
         """ Return True if a player named <name> is stored in this tree.
@@ -1230,11 +1204,6 @@ class TwoDTree(Tree):
             self._gt._point = point
             self._gt._split_type = 'y' if self._split_type == 'x' else 'x'
 
-    # self._nw, (self._point[0], self._se[1])
-    # (self._point[0], self._nw[1]), self._se
-    # self._nw, (self._se[0], self._point[1])
-    # (self._nw[0], self._point[1]), self._se
-
     def remove(self, name: str) -> None:
         """ Remove information about a player named <name> from this tree.
 
@@ -1333,38 +1302,6 @@ class TwoDTree(Tree):
             return [(self._name, self._point)] + \
                    self._gt._collect_all_nodes_info()
 
-    # def _remove_root(self):
-    #     # if self.is_leaf():
-    #     #     pass
-    #     if self._lt is None and self._gt is not None:
-    #         self._name, self._point, self._lt, self._gt = \
-    #             self._gt._name, self._gt._point, self._gt._lt, self._gt._gt
-    #     elif self._gt is None and self._lt is not None:
-    #         self._name, self._point, self._lt, self._gt = \
-    #             self._lt._name, self._lt._point, self._lt._lt, self._lt._gt
-    #     else:
-    #         promoted_tree_info = self._extract_max_info() # TRY ALL THE
-    #         REMOVAL WORK HERE
-    #         self.remove_point(promoted_tree_info[1]) # may fail silently if
-    #         promotion took place in previous step
-    #         # OR safer self.remove(promoted_tree_info[0])
-    #         self._name, self._point = \
-    #             promoted_tree_info[0], promoted_tree_info[1]
-
-    # def _extract_max_info(self) -> tuple:
-    #     # make return type more specific
-    #     # [str, Tuple[int, int]]
-    #     # issue: python thinks Optional[str] from type annotation
-    #     if self._gt is not None:
-    #         return self._gt._extract_max_info()
-    #     else:
-    #         info = self._name, self._point
-    #         if self._lt is not None:
-    #             self._name, self._point, self._lt, self._gt = \
-    #                 self._lt._name,
-    #                 self._lt._point, self._lt._lt, self._lt._gt
-    #         return info
-
     def remove_point(self, point: Tuple[int, int]) -> None:
         """ Remove information about a player at point <point> from this tree.
 
@@ -1388,7 +1325,7 @@ class TwoDTree(Tree):
                 self._point = None
         else:
             if self._point == point:
-                self._remove_root()  # O(n) !!!
+                self._remove_root()
             elif (self._split_type == 'x' and point[0] <= self._point[0]) or \
                     (self._split_type == 'y' and point[1] <= self._point[1]):
                 if self._lt is not None and self._lt.is_leaf() and \
@@ -1444,7 +1381,7 @@ class TwoDTree(Tree):
             else:
                 return None
         else:
-            point = self._find_point(name)  # Proper None ?
+            point = self._find_point(name)
             if point is not None:
                 new_point = _calc_point(point, direction, steps)
                 if not (self._nw[0] <= new_point[0] <= self._se[0] and
@@ -1750,36 +1687,9 @@ class TwoDTree(Tree):
 
 
 if __name__ == '__main__':
-    pass
-    # t = TwoDTree((0, 0), (100, 100))
-    # t.insert('a', (30, 100))
-    # t.insert('b', (50, 50))
-    # t.insert('c', (51, 50))
-    # t.insert('b', (150, 80))
-    # t.insert('c', (150, 20))
-    # t.insert('d', (20, 20))
-    # t.insert('e', (140, 100))
-    #
-    # import random
-    # q = QuadTree((250, 250))
-    # poly = [(274, 299), (468, 500), (323, 198), (397, 92), (169, 292), (124, 394), (463, 500), (366, 14), (325, 91), (99, 465)]
-    # for loc in poly:
-    #     print(loc)
-    #     q.insert(str(random.randint(0, 1000000)), loc)
-    # q.insert('a', (468, 500))
-    # q.insert('d',  (463, 500))
-    # q.insert('b', (250, 180))
-    # q.insert('c', (250, 181))
-    # q.insert('b', (150, 150))
-    # q.insert('c', (120, 180))
-
-    # import python_ta
-    # python_ta.check_all(config={'extra-imports': ['typing', 'R0913', 'R0902',
-    #                                               'W0611', 'R1710', 'R1702']})
-
+    import python_ta
+    python_ta.check_all(config={'extra-imports': ['typing'],
+                                'disable': ['R0913', 'R0902', 'W0611', 'R1710',
+                                            'R1702']})
     # import doctest
     # doctest.testmod()
-
-    # tree = QuadTree((250, 250))
-    # tree.insert('jon', (250, 250))
-    # tree.insert('joe', (250, 240))
