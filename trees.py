@@ -5,7 +5,9 @@ University of Toronto
 === Module Description ===
 This <trees.py> file contains the Tree abstract class and two concrete
 implementations of this abstract class. The two implementations are QuadTree and
-TwoDTree which is a kd-tree of dimension 2.
+TwoDTree which is a kd-tree of dimension 2. These trees are used to store
+information of a two dimensional space with points on it. What makes the use
+of a tree powerful here is it's efficiency in doing many of the operations.
 """
 
 from __future__ import annotations
@@ -459,7 +461,7 @@ class QuadTree(Tree):
         False
         """
         if self.is_empty():
-            pass
+            return None
         if self.is_leaf():
             if self._name == name:
                 self._name = None
@@ -483,7 +485,7 @@ class QuadTree(Tree):
         else:
             self._remove_helper(name)
             if self.is_empty():
-                pass
+                return None
             else:
                 self._remove_promoter()
 
@@ -548,7 +550,7 @@ class QuadTree(Tree):
         False
         """
         if self.is_empty():
-            pass
+            return None
         elif self.is_leaf():
             if self._point == point:
                 self._name = None
@@ -572,7 +574,7 @@ class QuadTree(Tree):
         else:
             self._remove_point_helper(point)
             if self.is_empty():
-                pass
+                return None
             else:
                 self._remove_promoter()
 
@@ -1219,7 +1221,7 @@ class TwoDTree(Tree):
         True
         """
         if self.is_empty():
-            pass
+            return None
         elif self.is_leaf():
             if self._name == name:
                 self._name = None
@@ -1317,7 +1319,7 @@ class TwoDTree(Tree):
         True
         """
         if self.is_empty():
-            pass
+            return None
         elif self.is_leaf():
             if self._point == point:
                 self._name = None
