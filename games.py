@@ -384,6 +384,7 @@ class EliminationTag(Game):
                 self._players[targets].select_enemy(player2)
                 self._players[player2].select_target(targets)
             self._players.pop(player1)
+            self.field.remove(player1)
             self._players[player2].increase_points(1)
         elif player2 in self._players[player1].get_targets():
             self._players[player1].ignore_target(player2)
@@ -392,6 +393,7 @@ class EliminationTag(Game):
                 self._players[targets].select_enemy(player1)
                 self._players[player1].select_target(targets)
             self._players.pop(player2)
+            self.field.remove(player2)
             self._players[player1].increase_points(1)
         else:
             self._players[player1].reverse_direction()
