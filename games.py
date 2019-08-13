@@ -231,7 +231,7 @@ class ZombieTag(Game):
         self.field.insert('first zombie', location_lst[n_players])
 
         for player in range(len(player_list)):
-            player_name = player_list[player]
+            player_name = str(player_list[player])
             create_player = Player(player_name, random.randint(0, max_vision),
                                    random.randint(0, max_speed), self, 'green',
                                    location_lst[player])
