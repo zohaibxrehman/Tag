@@ -150,13 +150,12 @@ class Tag(Game):
         """
         winner_lst = []
         to_del_lst = []
-        num_player = 0
+        num_player = len(self._players)
         for player in self._players:
             if self._players[player].get_points() >= 1 and player != self._it:
                 to_del_lst.append(player)
             else:
                 winner_lst.append(player)
-            num_player += 1
 
         if num_player == 2 and self._it in winner_lst:
             winner_lst.remove(self._it)
