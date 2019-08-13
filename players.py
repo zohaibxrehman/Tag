@@ -56,7 +56,7 @@ class Player:
 
     def __init__(self, name: str, vision: int, speed: int, game: 'Game',
                  colour: str, location: Tuple[int, int]) -> None:
-        """Initialize a new Player containing name, vision, speed game, colour
+        """Initialize a new Player containing name, vision, speed, game, colour
         and location.
 
         >>> player = Player('4', 1, 1, 'Game', 'green', (67,89))

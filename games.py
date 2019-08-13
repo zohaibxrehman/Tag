@@ -150,21 +150,24 @@ class Tag(Game):
         """
         winner_lst = []
         to_del_lst = []
+        num_player = 0
         for player in self._players:
             if self._players[player].get_points() >= 1 and player != self._it:
                 to_del_lst.append(player)
             else:
                 winner_lst.append(player)
-        for loser in to_del_lst:
-            self.field.remove(loser)
-            self._players.pop(loser)
+            num_player += 1
 
-        if len(winner_lst) == 2 and self._it in winner_lst:
+        if num_player == 2 and self._it in winner_lst:
             winner_lst.remove(self._it)
-        if len(winner_lst) == 1:
+            return winner_lst[0]
+        elif num_player == 1:
             return winner_lst[0]
         else:
-            return None
+            for loser in to_del_lst:
+                self.field.remove(loser)
+                self._players.pop(loser)
+                self._players[self._it].ignore_target(loser)
 
 
 class ZombieTag(Game):
