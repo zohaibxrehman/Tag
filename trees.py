@@ -460,7 +460,7 @@ class QuadTree(Tree):
         """
         if self.is_empty():
             pass
-        elif self.is_leaf():
+        if self.is_leaf():
             if self._name == name:
                 self._name = None
                 self._point = None
@@ -1058,13 +1058,10 @@ class TwoDTree(Tree):
         gt_size = self._gt.size() if self._gt is not None else 0
 
         while abs(lt_size - gt_size) > 1:
-            name = self._name
-            point = self._point
             if lt_size > gt_size:
                 self._remove_root_request('promote_left')
             else:
                 self._remove_root_request('promote_right')
-            self.insert(name, point)
 
             lt_size = self._lt.size() if self._lt is not None else 0
             gt_size = self._gt.size() if self._gt is not None else 0
@@ -1088,6 +1085,7 @@ class TwoDTree(Tree):
             self.remove_point(replacement_info[1])
             self._name = replacement_info[0]
             self._point = replacement_info[1]
+        self._insert_helper(self._name, self._point)
 
     def __contains__(self, name: str) -> bool:
         """ Return True if a player named <name> is stored in this tree.
