@@ -4,5 +4,5 @@ TwoDTree, which is a kd-tree of dimension 2. These trees are used to store
 information of a two dimensional space with points on it. What makes the use
 of these trees powerful here is it's efficiency in doing many of the operations.
 
-These data structures have been then used to support the backend of different versions
+These data structures have been then used to support different versions
 of the Tag game, including Zombie Tag and Elimination Tag.
